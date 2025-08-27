@@ -1,13 +1,13 @@
-# 🚗 AutoYa — Marketplace P2P de alquiler de vehículos (multiciudad)
+#  AutoYa — Marketplace P2P de alquiler de vehículos (multiciudad)
 
-## 🎯 Pitch (2–3 min)
+##  Pitch 
 - **Problema:** El alquiler tradicional de autos en agencias es rígido, costoso y con disponibilidad limitada; al mismo tiempo, muchos vehículos particulares están subutilizados.  
 - **Solución:** Plataforma P2P donde los propietarios publican sus vehículos y los clientes los reservan con seguridad, contratos digitales y trazabilidad.  
 - **Diferenciador:** Multiciudad, arquitectura distribuida con **CQRS + Redis** para disponibilidad y búsqueda rápida, y **SAGA** para gestión de reservas/pagos de forma resiliente.  
 
 ---
 
-## 🔗 Enlaces Únicos (fuente de verdad)
+## 🔗 Enlaces Únicos 
 - Mockups (Figma/Canva): [link]  
 - Tablero Jira (board): (https://corhuila-team-n93mngxo.atlassian.net/jira/software/projects/AUT/boards/34?atlOrigin=eyJpIjoiZDU1ZTUwZTE0NjI2NDkyYTlhOWMyMmNiYWUyNDQ4NmYiLCJwIjoiaiJ9)  
 - Roadmap Jira: https://corhuila-team-n93mngxo.atlassian.net/jira/software/projects/AUT/boards/34/backlog?atlOrigin=eyJpIjoiZTllMDRhMWQyMjI0NDQ0YjgzOGEyYzA3NWFmMTA3NWIiLCJwIjoiaiJ9 
@@ -20,7 +20,7 @@
 
 ---
 
-## 📌 Alcance (MVP)
+##  Alcance 
 - Registro/login (roles **CLIENTE** / **PROPIETARIO**).  
 - Publicación de vehículos (propietario) con fotos, disponibilidad y precio por día.  
 - Búsqueda por ciudad, fechas y filtros (precio, tipo de vehículo, etc.).  
@@ -29,7 +29,7 @@
 
 ---
 
-## 🏗️ Arquitectura (resumen)
+##  Arquitectura 
 - **Backend:** Spring Boot (microservicios: Auth, Vehículos, Disponibilidad, Reservas, Pagos-mock, Notifs).  
 - **Cache/locking:** Redis.  
 - **Búsqueda:** PostgreSQL (MVP) → Elasticsearch (avanzado).  
@@ -39,13 +39,14 @@
 
 ---
 
-## 📅 Cómo trabajamos (Scrum)
-- Sprints de **2 semanas** (6 sprints).  
+## Cómo trabajamos 
+- Sprints de **1 semanas** (6 sprints).  
 - Board en Jira con **Epics, User Stories** y criterios de aceptación (G/W/T).  
 - **DoR/DoD** documentados en la wiki del proyecto.  
 
 ---
 
-## 📝 Registro de decisiones (ADR)
+##  Registro de decisiones 
 - `/docs/adr-001-arquitectura.md` → CQRS + Redis para disponibilidad y reservas.  
 - `/docs/adr-002-pagos-mock-primero.md` → Pago simulado en MVP.  
+
