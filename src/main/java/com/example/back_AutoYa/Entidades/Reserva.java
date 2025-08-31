@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "reserva")
@@ -34,7 +36,7 @@ public class Reserva {
     @Column(name = "fecha_fin")
     private LocalDate fechaFin;
 
-    @Column(name = "precio_reserva", precision = 5, scale = 1)
+    @Column(name = "precio_reserva", columnDefinition = "NUMERIC(5,1)")
     private Double precioReserva;
 
     @Enumerated(EnumType.STRING)
