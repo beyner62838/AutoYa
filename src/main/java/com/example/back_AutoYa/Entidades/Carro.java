@@ -41,7 +41,8 @@ public class Carro {
     @Column(name = "color", length = 30)
     private String color;
 
-    @Column(name = "precio_dia", precision = 5, scale = 1)
+    // FORMA CORRECTA:
+    @Column(name = "precio_dia", columnDefinition = "NUMERIC(5,1)")
     private Double precioDia;
 
     @Column(name = "descripcion_adicional", columnDefinition = "TEXT")
