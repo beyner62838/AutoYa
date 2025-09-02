@@ -18,10 +18,11 @@ spring:
     locale: es
     locale-resolver: fixed
 
+
   datasource:
     url: jdbc:postgresql://localhost:5432/autoya_db
     username: postgres
-    password: 1234
+    password: 1907
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -45,23 +46,23 @@ spring:
         generate_statistics: false
         use_sql_comments: true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      username: default   # si tu redis requiere usuario (Redis 6+ ACL)
-      password:           # deja vacío si no usas password
-      database: 0
-      timeout: 60s
-      connect-timeout: 2s
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      username: default   # si tu redis requiere usuario (Redis 6+ ACL)
+#      password:           # deja vacío si no usas password
+#      database: 0
+#      timeout: 60s
+#      connect-timeout: 2s
 
-  cache:
-    type: redis
-    redis:
-      time-to-live: 3600s
-      cache-null-values: false
-      use-key-prefix: true
-      key-prefix: "autoya::"
+#  cache:
+#    type: redis
+#    redis:
+#      time-to-live: 3600s
+#      cache-null-values: false
+#      use-key-prefix: true
+#      key-prefix: "autoya::"
 
 springdoc:
   api-docs:
@@ -85,11 +86,6 @@ minio:
 # ===============================
 # CORS CONFIGURATION
 # ===============================
-cors:
-  allowed-origins: "http://localhost:3000,http://localhost:4200"
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: "*"
-  allow-credentials: true
 
 # ===============================
 # APPLICATION SPECIFIC CONFIGURATION
@@ -122,3 +118,4 @@ app:
 # ===============================
 jwt:
   secret: Z3NqZGprbGhzamtsZGhzamtsZGhzamtsZGhzamtsZGhzamtsZGhz
+
