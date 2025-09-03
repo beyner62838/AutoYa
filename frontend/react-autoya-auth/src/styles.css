@@ -1,0 +1,95 @@
+
+/* Fuente y reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #56ccf2, #2f80ed);
+  padding: 20px;
+}
+
+.login-container {
+  background: #fff;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  text-align: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.login-container h2 {
+  margin-bottom: 20px;
+  color: #2f80ed;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 14px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #2f80ed;
+  box-shadow: 0px 0px 8px rgba(47, 128, 237, 0.4);
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #56ccf2, #2f80ed);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  transform: scale(1.02);
+  background: linear-gradient(135deg, #2f80ed, #56ccf2);
+}
+
+.extra {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.extra a {
+  color: #2f80ed;
+  text-decoration: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
