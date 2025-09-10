@@ -32,7 +32,7 @@
 ##  Arquitectura 
 - **Backend:** Spring Boot (microservicios: Auth, Vehículos, Disponibilidad, Reservas, Pagos-mock, Notifs).  
 - **Cache/locking:** Redis.  
-- **Búsqueda:** PostgreSQL (MVP) → Elasticsearch (avanzado).  
+- **Búsqueda:** PostgreSQL (MVP). 
 - **Storage imágenes/documentos:** MinIO/S3.  
 - **Frontend:** Web (PWA).  
 - **Mensajería/eventos (avanzado):** Kafka/Rabbit.  
@@ -49,4 +49,5 @@
 ##  Registro de decisiones 
 - `/docs/adr-001-arquitectura.md` → CQRS + Redis para disponibilidad y reservas.  
 - `/docs/adr-002-pagos-mock-primero.md` → Pago simulado en MVP.  
+
 
