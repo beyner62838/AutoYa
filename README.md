@@ -35,7 +35,7 @@
 - **Búsqueda:** PostgreSQL (MVP). 
 - **Storage imágenes/documentos:** MinIO/S3.  
 - **Frontend:** Web (PWA).  
-- **Mensajería/eventos (avanzado):** Kafka/Rabbit.  
+- **Mensajería/eventos (avanzado):** MQTT.  
 
 ---
 
@@ -49,5 +49,6 @@
 ##  Registro de decisiones 
 - `/docs/adr-001-arquitectura.md` → CQRS + Redis para disponibilidad y reservas.  
 - `/docs/adr-002-pagos-mock-primero.md` → Pago simulado en MVP.  
+
 
 
