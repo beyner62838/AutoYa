@@ -26,9 +26,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@RequestBody User user) {
-        authService.register(user.getFirstname(),user.getLastname(), user.getPhone(), user.getEmail(),
-                user.getPassword(), user.getRole(), user.getProfileImageUrl());
-        return "user registrado";
+        return authService.register(
+                user.getFirstname(),
+                user.getLastname(),
+                user.getPhone(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole(),
+                user.getProfileImageUrl()
+        );
     }
 
     @GetMapping("/hello")
