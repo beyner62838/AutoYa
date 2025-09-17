@@ -9,19 +9,24 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // <- Anotación crítica
-@Table(name = "notification")
+@Entity
+@Table(name = "notifications")
 public class Notification {
 
-    @Id // <- Clave primaria
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // --- Relación con User ---
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NotificationType type;
 
-    @Column(nullable = false, length = 500) // length para limitar longitud
+    @Column(nullable = false, length = 500)
     private String message;
 
     @Column(nullable = false)
