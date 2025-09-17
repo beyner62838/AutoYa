@@ -6,22 +6,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // <- Anotación crítica para que JPA la reconozca
-@Table(name = "reservation") // Nombre de la tabla en la BD
+@Entity
+@Table(name = "reservations")
 public class Reservation {
 
-    @Id // <- Anotación crítica para la clave primaria
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // --- Relación con User (cliente que hace la reserva) ---
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "car_id", nullable = false)
-    private Long carId;
+    // --- Relación con Car (vehículo reservado) ---
+    @ManyToOne
+    @JoinColumn(name = "car_id", nullable = false)
+    private Car car;
 
     @Column(name = "start_date", nullable = false)
     private String startDate;
@@ -29,10 +35,14 @@ public class Reservation {
     @Column(name = "end_date", nullable = false)
     private String endDate;
 
-    @Enumerated(EnumType.STRING) // Para almacenar el enum como String
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status;
 
     @Column(name = "total_price", nullable = false)
     private double totalPrice;
+
+    // --- Relación con Payment (pagos de esta reserva) ---
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments;
 }

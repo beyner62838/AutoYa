@@ -10,13 +10,18 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // <- Anotación crítica
-@Table(name = "payment")
+@Entity
+@Table(name = "payments")
 public class Payment {
 
-    @Id // <- Clave primaria
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // --- Relación con Reservation ---
+    @ManyToOne
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
 
     @Column(nullable = false)
     private double amount;
