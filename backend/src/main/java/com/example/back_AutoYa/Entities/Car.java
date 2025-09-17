@@ -67,4 +67,3 @@ public class Car {
     // --- Relación con Reservation ---
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;
-}
