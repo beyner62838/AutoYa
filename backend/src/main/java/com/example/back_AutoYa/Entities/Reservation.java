@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -21,8 +22,8 @@ public class Reservation {
 
     // --- Relación con User (cliente que hace la reserva) ---
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "client_id", nullable = true)
+    private User client;
 
     // --- Relación con Car (vehículo reservado) ---
     @ManyToOne
@@ -30,10 +31,10 @@ public class Reservation {
     private Car car;
 
     @Column(name = "start_date", nullable = false)
-    private String startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date", nullable = false)
-    private String endDate;
+    private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -41,6 +42,9 @@ public class Reservation {
 
     @Column(name = "total_price", nullable = false)
     private double totalPrice;
+
+    private Boolean blocked = false;
+    private Double customPrice;
 
     // --- Relación con Payment (pagos de esta reserva) ---
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)

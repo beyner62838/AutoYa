@@ -61,8 +61,6 @@ public class Car {
     @Column(name = "license_plate", nullable = false, unique = true)
     private String licensePlate;
 
-    @Column(name = "image_url")
-    private String imageUrl;
 
     // --- Relación con Reservation ---
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
