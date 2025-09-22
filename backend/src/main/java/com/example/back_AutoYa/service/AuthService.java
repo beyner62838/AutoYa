@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class AuthService {
 
@@ -51,6 +53,7 @@ public class AuthService {
         user.setPhone(phone);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password)); // 🔑 Encriptar
+        user.setCreationDate(LocalDate.now());
 
         // <- Aquí el cambio: usar el valor correcto del enum como default
         user.setRole(role != null ? role : UserRole.ADMIN);

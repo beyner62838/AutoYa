@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface CarPhotoRepository extends JpaRepository<CarPhoto, Long> {
     List<CarPhoto> findByCarOrderByCreatedAtDesc(Car car);
+    Boolean existsByCarAndCoverTrue(Car car);
 }

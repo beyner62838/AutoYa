@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,24 +22,44 @@ public class CarPhotoService {
     private final StorageService storageService;
 
     @Transactional
-    public CarPhotoDTO upload(Long carId, MultipartFile file) throws Exception {
+    public List<CarPhotoDTO> upload(Long carId, List<MultipartFile> files) throws Exception {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        String objectKey = storageService.buildObjectKey(carId, file.getOriginalFilename());
-        String url = storageService.upload(objectKey, file);
 
-        CarPhoto photo = CarPhoto.builder()
-                .car(car)
-                .url(url)
-                .cover(false)
-                .build();
-        photo = carPhotoRepository.save(photo);
-        // Si el carro no tiene portada aún, la primera foto se vuelve cover
-        if (car.getImageUrl() == null) {
-            car.setImageUrl(url);
+        List<CarPhotoDTO> uploaded = new ArrayList<>();
+
+        // Verificar si ya existe portada
+        boolean hasCover = carPhotoRepository.existsByCarAndCoverTrue(car);
+
+        for (MultipartFile file : files) {
+            String objectKey = storageService.buildObjectKey(carId, file.getOriginalFilename());
+            String url = storageService.upload(objectKey, file);
+
+            CarPhoto photo = CarPhoto.builder()
+                    .car(car)
+                    .url(url)
+                    .cover(false)
+                    .build();
+
+            // Si no había portada antes, la primera que subimos será cover
+            if (!hasCover) {
+                photo.setCover(true);
+                hasCover = true;
+            }
+
+            photo = carPhotoRepository.save(photo);
+
+            uploaded.add(new CarPhotoDTO(
+                    photo.getId(),
+                    photo.getUrl(),
+                    photo.isCover(),
+                    photo.getCreatedAt()
+            ));
         }
-        return new CarPhotoDTO(photo.getId(), photo.getUrl(), photo.isCover(), photo.getCreatedAt());
+
+        return uploaded;
     }
+
 
     @Transactional(readOnly = true)
     public List<CarPhotoDTO> list(Long carId) {
@@ -59,23 +80,24 @@ public class CarPhotoService {
             throw new RuntimeException("La foto no pertenece a este vehículo");
         }
         carPhotoRepository.delete(p);
-        // Si era cover, limpia portada del Car (simple)
-        if (p.isCover() && p.getUrl().equals(car.getImageUrl())) {
-            car.setImageUrl(null);
-        }
     }
 
     @Transactional
     public void setCover(Long carId, Long photoId) {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+
         List<CarPhoto> photos = carPhotoRepository.findByCarOrderByCreatedAtDesc(car);
-        for (CarPhoto ph : photos) {
-            ph.setCover(ph.getId().equals(photoId));
-        }
-        carPhotoRepository.saveAll(photos);
-        CarPhoto newCover = photos.stream().filter(ph -> ph.getId().equals(photoId)).findFirst()
+
+        photos.forEach(ph -> ph.setCover(ph.getId().equals(photoId)));
+
+        photos.stream()
+                .filter(ph -> ph.getId().equals(photoId))
+                .findFirst()
                 .orElseThrow(() -> new RuntimeException("Foto no encontrada"));
-        car.setImageUrl(newCover.getUrl());
+
+        carPhotoRepository.saveAll(photos);
     }
+
+
 }

@@ -43,7 +43,7 @@ public class User {
     private String profileImageUrl;
 
     /** Relación correcta con Reservation */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;
 
     /** Relación con Document */

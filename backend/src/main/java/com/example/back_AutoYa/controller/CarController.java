@@ -1,10 +1,14 @@
 package com.example.back_AutoYa.controller;
 
+import com.example.back_AutoYa.Entities.Car;
+import com.example.back_AutoYa.dto.AvailabilityDTO;
 import com.example.back_AutoYa.dto.CarDTO;
 import com.example.back_AutoYa.service.CarService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,9 +23,24 @@ public class CarController {
         return carService.getAllCars();
     }
 
+    @GetMapping("/avalible")
+    public List<CarDTO> getAvalibleCars(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        return carService.getAvailableCars(startDate, endDate);
+    }
     @GetMapping("/{id}")
     public CarDTO getCarById(@PathVariable Long id) {
         return carService.getCarById(id);
+    }
+
+    @GetMapping("/{id}/availability")
+    public List<AvailabilityDTO> getAvailability(
+            @PathVariable Long id,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        return carService.getAvailableDatesForCar(id, from, to);
     }
 
     @PostMapping

@@ -16,8 +16,8 @@ public class CarPhotoController {
     private final CarPhotoService service;
 
     @PostMapping
-    public CarPhotoDTO upload(@PathVariable Long carId, @RequestParam("file") MultipartFile file) throws Exception {
-        return service.upload(carId, file);
+    public List<CarPhotoDTO> upload(@PathVariable Long carId, @RequestParam("file") List<MultipartFile> files) throws Exception {
+        return service.upload(carId, files);
     }
 
     @GetMapping

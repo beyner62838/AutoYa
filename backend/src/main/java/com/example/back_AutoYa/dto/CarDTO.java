@@ -1,9 +1,13 @@
 package com.example.back_AutoYa.dto;
 
 import com.example.back_AutoYa.Entities.Enums.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CarDTO {
     private Long id;
     private Long ownerId; // Solo el ID del propietario
@@ -17,5 +21,4 @@ public class CarDTO {
     private TransmissionType transmissionType;
     private double pricePerDay;
     private String licensePlate;
-    private String imageUrl;
 }
