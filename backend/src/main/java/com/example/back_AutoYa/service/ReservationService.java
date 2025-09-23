@@ -1,6 +1,7 @@
 package com.example.back_AutoYa.service;
 
 import com.example.back_AutoYa.Entities.User;
+import com.example.back_AutoYa.Mapper.ReservationMapper;
 import com.example.back_AutoYa.Mapper.CarMapper;
 import com.example.back_AutoYa.Mapper.ReservationMapper;
 import com.example.back_AutoYa.Mapper.UserMapper;
@@ -9,17 +10,21 @@ import com.example.back_AutoYa.Entities.Reservation;
 import com.example.back_AutoYa.repository.ReservationRepository;
 import com.example.back_AutoYa.repository.CarRepository;
 import com.example.back_AutoYa.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.example.back_AutoYa.Entities.Car;
 import com.example.back_AutoYa.Entities.Enums.ReservationStatus;
 import java.time.LocalDate;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final CarRepository carRepository;
     private final UserRepository userRepository;
+    private final CompletionService completionService;
+
 
     public ReservationService(ReservationRepository reservationRepository, CarRepository carRepository, UserRepository userRepository) {
         this.reservationRepository = reservationRepository;
@@ -34,6 +39,20 @@ public class ReservationService {
     }
 
 
+    public Long selectAndHoldReservation(Long carId, Long clientId){
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new RuntimeException("Car not found"));
+        User client = userRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+
+        Reservation reservation = new Reservation();
+        reservation.setStatus(ReservationStatus.ON_HOLD);
+        reservation.setCar(car);
+        reservation.setClient(client);
+        reservationRepository.save(reservation);
+        completionService.deleteHoldReservation(reservation.getId());
+        return reservation.getId();
+    }
 
 
 

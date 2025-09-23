@@ -27,6 +27,13 @@ public class Reservation {
 
     // --- Relación con Car (vehículo reservado) ---
     @ManyToOne
+    @JoinColumn(name = "car_id")
+    private Car car;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 
@@ -40,13 +47,15 @@ public class Reservation {
     @Column(nullable = false)
     private ReservationStatus status;
 
-    @Column(name = "total_price", nullable = false)
+    @Column(name = "total_price")
     private double totalPrice;
 
     private Boolean blocked = false;
     private Double customPrice;
 
     // --- Relación con Payment (pagos de esta reserva) ---
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+
     private List<Payment> payments;
 }
