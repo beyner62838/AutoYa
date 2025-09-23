@@ -34,6 +34,13 @@ public class Reservation {
     private LocalDate startDate;
 
     @Column(name = "end_date")
+    @JoinColumn(name = "car_id", nullable = false)
+    private Car car;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
@@ -48,5 +55,7 @@ public class Reservation {
 
     // --- Relación con Payment (pagos de esta reserva) ---
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+
     private List<Payment> payments;
 }

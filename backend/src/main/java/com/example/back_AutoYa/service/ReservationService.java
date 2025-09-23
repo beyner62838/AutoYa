@@ -2,6 +2,9 @@ package com.example.back_AutoYa.service;
 
 import com.example.back_AutoYa.Entities.User;
 import com.example.back_AutoYa.Mapper.ReservationMapper;
+import com.example.back_AutoYa.Mapper.CarMapper;
+import com.example.back_AutoYa.Mapper.ReservationMapper;
+import com.example.back_AutoYa.Mapper.UserMapper;
 import com.example.back_AutoYa.dto.*;
 import com.example.back_AutoYa.Entities.Reservation;
 import com.example.back_AutoYa.repository.ReservationRepository;
@@ -23,11 +26,18 @@ public class ReservationService {
     private final CompletionService completionService;
 
 
+    public ReservationService(ReservationRepository reservationRepository, CarRepository carRepository, UserRepository userRepository) {
+        this.reservationRepository = reservationRepository;
+        this.carRepository = carRepository;
+        this.userRepository = userRepository;
+    }
+
     public List<ReservationDTO> getAllReservations() {
         List<Reservation> allReservations = reservationRepository.findAll();
 
         return ReservationMapper.toDTOList(allReservations);
     }
+
 
     public Long selectAndHoldReservation(Long carId, Long clientId){
         Car car = carRepository.findById(carId)
