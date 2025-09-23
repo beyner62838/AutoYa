@@ -9,16 +9,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // <- Anotación crítica
+@Entity
 @Table(name = "car")
 public class Car {
 
-    @Id // <- Clave primaria
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // --- Relación con User como propietario ---
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false)
     private String brand;
@@ -54,6 +61,8 @@ public class Car {
     @Column(name = "license_plate", nullable = false, unique = true)
     private String licensePlate;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+
+    // --- Relación con Reservation ---
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations;
 }

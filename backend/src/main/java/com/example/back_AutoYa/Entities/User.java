@@ -1,21 +1,22 @@
 package com.example.back_AutoYa.Entities;
 
 import com.example.back_AutoYa.Entities.Enums.UserRole;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
-@Entity // <- This annotation is CRITICAL
-@Table(name = "users") // Optional, you can change the table name
+@Entity
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
 
-    @Id // <- This annotation is CRITICAL
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -24,6 +25,9 @@ public class User {
 
     @Column(nullable = false)
     private String lastname;
+
+    @Column(length = 15, nullable = false)
+    private String phone;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -34,10 +38,19 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @Column(nullable = false)
-    private String phone;
-
     private LocalDate creationDate;
 
     private String profileImageUrl;
+
+    /** Relación correcta con Reservation */
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations;
+
+    /** Relación con Document */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents;
+
+    /** Relación con Notification */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications;
 }
