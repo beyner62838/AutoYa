@@ -31,7 +31,6 @@ public class ReservationController {
     }
 
     @PostMapping
-    @PostMapping()
     public ReservationDTO createReservation(
             @RequestParam Long clientId,
             @RequestParam Long carId,
