@@ -26,12 +26,6 @@ public class ReservationService {
     private final CompletionService completionService;
 
 
-    public ReservationService(ReservationRepository reservationRepository, CarRepository carRepository, UserRepository userRepository) {
-        this.reservationRepository = reservationRepository;
-        this.carRepository = carRepository;
-        this.userRepository = userRepository;
-    }
-
     public List<ReservationDTO> getAllReservations() {
         List<Reservation> allReservations = reservationRepository.findAll();
 
