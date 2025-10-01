@@ -25,7 +25,6 @@ public class Payment {
     // --- Relación con Reservation ---
     @ManyToOne
     @JoinColumn(name = "reservation_id", nullable = false)
-    @JsonBackReference
     private Reservation reservation;
 
     @Column(nullable = false)

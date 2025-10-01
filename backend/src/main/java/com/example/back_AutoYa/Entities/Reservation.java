@@ -49,6 +49,5 @@ public class Reservation {
 
     // --- Relación con Payment (pagos de esta reserva) ---
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonManagedReference
     private List<Payment> payments;
 }
