@@ -2,9 +2,6 @@ package com.example.back_AutoYa.service;
 
 import com.example.back_AutoYa.Entities.User;
 import com.example.back_AutoYa.Mapper.ReservationMapper;
-import com.example.back_AutoYa.Mapper.CarMapper;
-import com.example.back_AutoYa.Mapper.ReservationMapper;
-import com.example.back_AutoYa.Mapper.UserMapper;
 import com.example.back_AutoYa.dto.*;
 import com.example.back_AutoYa.Entities.Reservation;
 import com.example.back_AutoYa.repository.ReservationRepository;
@@ -16,9 +13,11 @@ import com.example.back_AutoYa.Entities.Car;
 import com.example.back_AutoYa.Entities.Enums.ReservationStatus;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final CarRepository carRepository;
@@ -26,12 +25,12 @@ public class ReservationService {
     private final CompletionService completionService;
 
 
+
     public List<ReservationDTO> getAllReservations() {
         List<Reservation> allReservations = reservationRepository.findAll();
 
         return ReservationMapper.toDTOList(allReservations);
     }
-
 
     public Long selectAndHoldReservation(Long carId, Long clientId){
         Car car = carRepository.findById(carId)
@@ -127,4 +126,36 @@ public class ReservationService {
         return days * car.getPricePerDay();
     }
 
+
+    public String cancelReservation(Long reservationId) {
+        // 1. Buscar la reserva
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada con id: " + reservationId));
+
+        // 2. Reglas de estado: no cancelar si ya está COMPLETED o CANCELLED
+        if (reservation.getStatus() == ReservationStatus.COMPLETED) {
+            throw new RuntimeException("No se puede cancelar una reserva completada");
+        }
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            throw new RuntimeException("La reserva ya está cancelada");
+        }
+
+        // 3. Regla opcional temporal: no permitir cancelar si ya inició
+        LocalDate today = LocalDate.now();
+        if (reservation.getStartDate() != null && !reservation.getStartDate().isAfter(today)) {
+            throw new RuntimeException("No puedes cancelar una reserva que ya inició o que comienza hoy");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.ON_HOLD &&
+        reservation.getStatus() != ReservationStatus.IN_PROGRESS &&
+        reservation.getStatus() != ReservationStatus.RESERVED){
+            throw new RuntimeException("El estado actual no permite cancelar la reserva");
+        }
+        // 4. Cambiar estado y persistir
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        Reservation updated = reservationRepository.save(reservation);
+
+        // 5. Retornar DTO
+        return "La reserva fue cancelada exitosamente";
+    }
 }

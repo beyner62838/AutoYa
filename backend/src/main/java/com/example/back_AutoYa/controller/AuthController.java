@@ -3,6 +3,7 @@ package com.example.back_AutoYa.controller;
 import com.example.back_AutoYa.dto.LoginRequest;
 import com.example.back_AutoYa.dto.LoginResponse;
 import com.example.back_AutoYa.Entities.User;
+import com.example.back_AutoYa.dto.UserDTO;
 import com.example.back_AutoYa.service.AuthService;
 import com.example.back_AutoYa.service.UserService;
 import jakarta.validation.Valid;
@@ -38,7 +39,7 @@ public class AuthController {
     }
 
     @GetMapping("/hello")
-    public User hello(@RequestHeader("Authorization") String authHeader) {
+    public UserDTO hello(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         return userService.getUserInfoFromToken(token);
     }
