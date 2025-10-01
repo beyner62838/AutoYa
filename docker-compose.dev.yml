@@ -35,7 +35,7 @@ services:
 
   postgres:
     image: postgres:15
-    container_name: postgres
+    container_name: postgres-dev
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
