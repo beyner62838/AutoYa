@@ -30,7 +30,7 @@ public class ReservationController {
         return reservationService.blockDateAndSetPrice(dto);
     }
 
-    @PostMapping
+    @PostMapping()
     public ReservationDTO createReservation(
             @RequestParam Long clientId,
             @RequestParam Long carId,
@@ -44,5 +44,4 @@ public class ReservationController {
     public Long holdReservation(@RequestParam Long carId, @RequestParam Long clientId) {
         return reservationService.selectAndHoldReservation(carId, clientId);
     }
-
 }

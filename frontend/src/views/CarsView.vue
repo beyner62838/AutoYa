@@ -20,15 +20,20 @@
     </div>
 
     <CarModal v-if="showCarModal" :car="selectedCar" :userInfo="userInfo" @close="closeModal" @show-alert="showAlert" @reserved="onReserved" />
-    <AddCarModal v-if="showAdd" @close="showAdd=false" @car-added="onCarAdded" @show-alert="showAlert" />
+    <AddCarModal
+      v-if="showAdd"
+      :userInfo="userInfo"
+      @close="showAdd=false"
+      @car-added="onCarAdded"
+      @show-alert="showAlert"
+    />
   </div>
 </template>
 
 <script>
-import api from '../services/api'
-import CarCard from '../components/CarCard.vue'
-import CarModal from '../components/CarModal.vue'
-import AddCarModal from '../components/AddCarModal.vue'
+import CarCard from '../components/CarCard.vue';
+import CarModal from '../components/CarModal.vue';
+import AddCarModal from '../components/AddCarModal.vue';
 
 export default {
   name: 'CarsView',
@@ -48,6 +53,8 @@ export default {
     try {
       const res = await api.get('/auth/hello')
       this.userInfo = res.data
+      localStorage.setItem('userId', this.userInfo.id)
+      log(this.userInfo)
     } catch {}
   },
   methods: {
@@ -69,7 +76,7 @@ export default {
           params: { startDate: this.searchDates.startDate, endDate: this.searchDates.endDate }
         })
         this.cars = resp.data
-        this.showAlert('success', `Se encontraron ${this.cars.length} autos disponibles`)
+        this.showAlert('success', 'Se encontraron ${this.cars.length} autos disponibles')
       } catch (err) {
         this.showAlert('error', 'Error al buscar autos disponibles')
       }

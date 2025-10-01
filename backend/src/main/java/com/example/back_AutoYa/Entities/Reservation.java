@@ -1,6 +1,7 @@
 package com.example.back_AutoYa.Entities;
 
 import com.example.back_AutoYa.Entities.Enums.ReservationStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,20 +28,20 @@ public class Reservation {
 
     // --- Relación con Car (vehículo reservado) ---
     @ManyToOne
-    @JoinColumn(name = "car_id")
+    @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false,columnDefinition = "DATE")
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date", nullable = false,columnDefinition = "DATE")
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status;
 
-    @Column(name = "total_price")
+    @Column(name = "total_price", nullable = false)
     private double totalPrice;
 
     private Boolean blocked = false;
@@ -48,6 +49,6 @@ public class Reservation {
 
     // --- Relación con Payment (pagos de esta reserva) ---
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-
+    @JsonManagedReference
     private List<Payment> payments;
 }

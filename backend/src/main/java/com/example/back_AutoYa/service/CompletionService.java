@@ -22,12 +22,11 @@ public class CompletionService {
 
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
-    private final CarRepository carRepository;
 
     @Async
     @Transactional
     public void completePayment(Long paymentId) {
-        // Ejecutar asincrónicamente después de 3 minutos
+        // Ejecutar asincrónicamente después de 1 minuto
         CompletableFuture.delayedExecutor(1, TimeUnit.MINUTES)
                 .execute(() -> {
                     Payment payment = paymentRepository.findById(paymentId)
