@@ -24,8 +24,29 @@
           <input type="text" v-model="newCar.color" required />
         </div>
         <div class="form-group">
+          <label>Categoría</label>
+          <select v-model="newCar.category" required>
+            <option value="SEDAN">Sedán</option>
+            <option value="SUV">SUV</option>
+            <option value="TRUCK">Camioneta</option>
+            <option value="COUPE">Coupé</option>
+            <option value="HATCHBACK">Hatchback</option>
+            <option value="VAN">Van</option>
+            <!-- Agrega más si es necesario -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select v-model="newCar.status" required>
+            <option value="AVAILABLE">Disponible</option>
+            <option value="RENTED">Rentado</option>
+            <option value="MAINTENANCE">Mantenimiento</option>
+            <option value="INACTIVE">Inactivo</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Transmisión</label>
-          <select v-model="newCar.transmission" required>
+          <select v-model="newCar.transmissionType" required>
             <option value="MANUAL">Manual</option>
             <option value="AUTOMATIC">Automática</option>
           </select>
@@ -40,12 +61,12 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Número de Asientos</label>
-          <input type="number" v-model="newCar.numberOfSeats" required />
-        </div>
-        <div class="form-group">
           <label>Precio por Día</label>
           <input type="number" v-model="newCar.pricePerDay" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label>Placa</label>
+          <input type="text" v-model="newCar.licensePlate" required />
         </div>
 
         <button class="btn btn-primary" type="submit">Agregar Auto</button>
@@ -58,22 +79,30 @@
 import api from '../services/api'
 export default {
   name: 'AddCarModal',
+  props: {
+    userInfo: { type: Object, required: true }
+  },
   data() {
     return {
       newCar: {
+        // ownerId se asigna justo antes de enviar la petición
         brand: '',
         model: '',
         year: new Date().getFullYear(),
         color: '',
-        transmission: 'MANUAL',
+        category: 'SEDAN',
+        status: 'AVAILABLE',
         fuelType: 'GASOLINE',
-        numberOfSeats: 5,
-        pricePerDay: 50
+        transmissionType: 'MANUAL',
+        pricePerDay: 50,
+        licensePlate: ''
       }
     }
   },
   methods: {
     async addCar() {
+      // Asigna ownerId justo antes de enviar
+      this.newCar.ownerId = localStorage.getItem('userId')
       try {
         const resp = await api.post('/api/cars', this.newCar)
         this.$emit('car-added', resp.data)

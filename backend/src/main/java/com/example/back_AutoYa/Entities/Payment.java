@@ -2,6 +2,7 @@ package com.example.back_AutoYa.Entities;
 
 import com.example.back_AutoYa.Entities.Enums.PaymentMethod;
 import com.example.back_AutoYa.Entities.Enums.PaymentStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,6 @@ public class Payment {
     // --- Relación con Reservation ---
     @ManyToOne
     @JoinColumn(name = "reservation_id", nullable = false)
-    @JsonIgnore
     private Reservation reservation;
 
     @Column(nullable = false)

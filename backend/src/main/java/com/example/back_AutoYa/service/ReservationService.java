@@ -16,13 +16,14 @@ import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final CompletionService completionService;
+
 
 
     public List<ReservationDTO> getAllReservations() {
