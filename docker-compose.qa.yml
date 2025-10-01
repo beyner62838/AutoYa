@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: beyner/auto-backend:qa
+    env_file:
+      - .env.qa
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: beyner/auto-frontend:qa
+    env_file:
+      - .env.qa
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend

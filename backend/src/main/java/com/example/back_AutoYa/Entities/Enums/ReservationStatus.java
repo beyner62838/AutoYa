@@ -4,7 +4,5 @@ public enum ReservationStatus {
     RESERVED,
     CANCELLED,
     COMPLETED,
-    IN_PROGRESS,
-    BLOCKED, // <-- Agregado para bloqueos de propietario
-    ON_HOLD // hold temporal de cliente (10 minutos)
-}
+    IN_PROGRESS
+  }
