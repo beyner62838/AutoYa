@@ -33,7 +33,7 @@ public class Reservation {
     @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date")
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
@@ -48,6 +48,5 @@ public class Reservation {
 
     // --- Relación con Payment (pagos de esta reserva) ---
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-
     private List<Payment> payments;
 }
