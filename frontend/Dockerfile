@@ -1,5 +1,5 @@
 # frontend/Dockerfile
-FROM node:18-alpine as build
+FROM maven:3.9.6-eclipse-temurin-21 as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
