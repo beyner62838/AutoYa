@@ -1,7 +1,7 @@
 package com.example.back_AutoYa.controller;
 
 import com.example.back_AutoYa.Entities.Payment;
-import com.example.back_AutoYa.dto.ReservationDTO;
+import com.example.back_AutoYa.dto.PaymentIntentRequest;
 import com.example.back_AutoYa.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-
+    // ----------- Métodos existentes (NO modificados) -----------
 
     @GetMapping
     public List<Payment> getAllPayments() {
@@ -34,10 +34,14 @@ public class PaymentController {
         return paymentService.createPayment(reservationId, amount, method);
     }
 
-
+    // ----------- Corregido: ahora recibe el request con datos ----------
     @PostMapping("/intent")
-    public ResponseEntity<Map<String, Object>> createPaymentIntent(@RequestBody(required = false) Map<String, Object> request) {
-        Map<String, Object> response = paymentService.createPaymentIntent();
+    public ResponseEntity<Map<String, Object>> createPaymentIntent(@RequestBody PaymentIntentRequest request) {
+        Map<String, Object> response = paymentService.createPaymentIntent(
+                request.reservationId(),
+                request.amount(),
+                request.method()
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -50,5 +54,32 @@ public class PaymentController {
         } else {
             return ResponseEntity.ok(response);
         }
+    }
+
+    // ----------- 🚀 Confirmación de pago ----------
+    @PostMapping("/confirm")
+    public ResponseEntity<?> confirmPayment(
+            @RequestParam Long reservationId,
+            @RequestParam Double amount,
+            @RequestParam String method,
+            @RequestParam String intentId) {
+
+        // 1️⃣ Validar que el intent exista y esté capturado
+        Map<String, Object> intentStatus = paymentService.capturePayment(intentId);
+        if (intentStatus.containsKey("error") || !"CAPTURED".equals(intentStatus.get("status"))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of("error", "El intent no está en estado válido para confirmar el pago.")
+            );
+        }
+
+        // 2️⃣ Crear el pago real en BD
+        Payment payment = paymentService.createPayment(reservationId, amount, method);
+
+        // 3️⃣ Retornar información del pago y el intent
+        return ResponseEntity.ok(Map.of(
+                "payment", payment,
+                "intentId", intentId,
+                "message", "Pago confirmado y registrado en el sistema."
+        ));
     }
 }
