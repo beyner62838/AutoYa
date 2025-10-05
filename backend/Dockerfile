@@ -1,25 +1,17 @@
-# backend/Dockerfile
-
-# Etapa build
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /app
 
-# Copiar descriptor de dependencias
 COPY pom.xml ./
-
-# Descargar dependencias para cachear
 RUN mvn -B dependency:go-offline
 
-# Copiar el resto del código
 COPY src ./src
-
-# Construir el JAR
 RUN mvn -B clean package -DskipTests
 
-# Etapa runtime
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-COPY --from=builder /app/target/*.jar app.jar
+ARG JAR_FILE=target/*.jar
+COPY --from=builder /app/${JAR_FILE} app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
