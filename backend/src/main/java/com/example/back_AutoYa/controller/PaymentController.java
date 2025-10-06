@@ -66,7 +66,7 @@ public class PaymentController {
 
         // 1️⃣ Validar que el intent exista y esté capturado
         Map<String, Object> intentStatus = paymentService.capturePayment(intentId);
-        if (intentStatus.containsKey("error") || !"CAPTURED".equals(intentStatus.get("status"))) {
+        if (intentStatus.containsKey("error") || !"COMPLETED".equals(intentStatus.get("status"))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                     Map.of("error", "El intent no está en estado válido para confirmar el pago.")
             );
