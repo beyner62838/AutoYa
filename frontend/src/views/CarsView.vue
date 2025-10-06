@@ -34,7 +34,7 @@
 import CarCard from '../components/CarCard.vue';
 import CarModal from '../components/CarModal.vue';
 import AddCarModal from '../components/AddCarModal.vue';
-
+import api from '../services/api';
 export default {
   name: 'CarsView',
   components: { CarCard, CarModal, AddCarModal },

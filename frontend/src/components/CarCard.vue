@@ -1,12 +1,12 @@
 <template>
   <div class="car-card" @click="$emit('select', car)">
     <div class="car-header">
-      <span class="car-brand">{{ car.marca }}</span>
-      <span class="car-model">{{ car.modelo }}</span>
+      <span class="car-brand">{{ car.brand }}</span>
+      <span class="car-model">{{ car.model }}</span>
     </div>
     <div class="car-info">
-      <span class="car-year">Año: {{ car.año }}</span>
-      <span class="car-price" v-if="car.precio">Precio: ${{ car.precio }}</span>
+      <span class="car-year">Año: {{ car.year }}</span>
+      <span class="car-price" v-if="car.precio">Precio: ${{ car.pricePerDay }}</span>
     </div>
     <button class="details-btn">Ver detalles</button>
   </div>
