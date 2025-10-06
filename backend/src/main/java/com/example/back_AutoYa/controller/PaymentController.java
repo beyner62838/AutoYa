@@ -18,7 +18,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    // ----------- Métodos existentes (NO modificados) -----------
+
 
     @GetMapping
     public List<Payment> getAllPayments() {
@@ -64,11 +64,22 @@ public class PaymentController {
             @RequestParam String method,
             @RequestParam String intentId) {
 
-        // 1️⃣ Validar que el intent exista y esté capturado
-        Map<String, Object> intentStatus = paymentService.capturePayment(intentId);
-        if (intentStatus.containsKey("error") || !"CAPTURED".equals(intentStatus.get("status"))) {
+        // 1️⃣ Validar que el intent exista y esté capturado o completado
+        Map<String, Object> intentStatus = paymentService.getIntentStatus(intentId);
+
+        if (intentStatus.containsKey("error")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    Map.of("error", "El intent no está en estado válido para confirmar el pago.")
+                    Map.of("error", "No se pudo capturar el intent o no existe.")
+            );
+        }
+
+        // Obtener el estado del intento de pago
+        String status = (String) intentStatus.get("status");
+
+        // ✅ Permitir CAPTURED o COMPLETED
+        if (!"CAPTURED".equalsIgnoreCase(status) && !"COMPLETED".equalsIgnoreCase(status)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of("error", "El intent no está en un estado válido para confirmar el pago.")
             );
         }
 
@@ -79,7 +90,9 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of(
                 "payment", payment,
                 "intentId", intentId,
+                "status", status,
                 "message", "Pago confirmado y registrado en el sistema."
         ));
     }
+
 }

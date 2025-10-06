@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    // Simulación de intents de pago en memoria asociados a Payment
+    // 🧠 Simulación de intents de pago (memoria temporal)
     private final Map<String, Payment> paymentIntents = new ConcurrentHashMap<>();
 
     private final ReservationRepository reservationRepository;
@@ -33,7 +33,9 @@ public class PaymentService {
     private final CompletionService completionService;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-    // 🔹 Crear intent asociado a una reserva
+    // ==============================================================
+    // 🔹 1️⃣ Crear un intent de pago temporal (no persistente)
+    // ==============================================================
     public Map<String, Object> createPaymentIntent(Long reservationId, Double amount, String method) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada con id: " + reservationId));
@@ -44,10 +46,10 @@ public class PaymentService {
         payment.setReservation(reservation);
         payment.setAmount(amount);
         payment.setMethod(PaymentMethod.valueOf(method));
-        payment.setStatus(PaymentStatus.PENDING); // Intent aún no confirmado
+        payment.setStatus(PaymentStatus.PENDING); // Aún no confirmado
         payment.setDate(LocalDate.now());
 
-        // Guardamos el intent en memoria (no en BD todavía)
+        // Guardamos el intent en memoria
         paymentIntents.put(intentId, payment);
 
         return Map.of(
@@ -58,7 +60,9 @@ public class PaymentService {
         );
     }
 
-    // 🔹 Capturar intent de pago → convertir en Payment real
+    // ==============================================================
+    // 🔹 2️⃣ Capturar un intent → guardar en BD
+    // ==============================================================
     @Transactional
     public Map<String, Object> capturePayment(String intentId) {
         if (intentId == null || !paymentIntents.containsKey(intentId)) {
@@ -75,11 +79,11 @@ public class PaymentService {
             );
         }
 
-        // Actualizamos estado y lo persistimos en BD
+        // ✅ Cambiar estado a COMPLETED y guardar en BD
         payment.setStatus(PaymentStatus.COMPLETED);
         paymentRepository.save(payment);
 
-        // Actualizar estado de la reserva si ya está cubierta
+        // Verificar si la reserva queda completamente pagada
         Reservation reservation = payment.getReservation();
         double totalPaid = reservation.getPayments().stream()
                 .filter(p -> p.getStatus() == PaymentStatus.COMPLETED)
@@ -99,15 +103,39 @@ public class PaymentService {
         );
     }
 
-    // -------- Métodos ya existentes (sin modificar) --------
+    // ==============================================================
+    // 🔹 3️⃣ Consultar el estado actual de un intent
+    //    (👉 usado en el endpoint /confirm)
+    // ==============================================================
+    public Map<String, Object> getIntentStatus(String intentId) {
+        if (intentId == null || !paymentIntents.containsKey(intentId)) {
+            return Map.of("error", "Intent de pago no encontrado.");
+        }
+
+        Payment payment = paymentIntents.get(intentId);
+
+        return Map.of(
+                "intentId", intentId,
+                "status", payment.getStatus().name(), // Ej: PENDING, COMPLETED
+                "reservationId", payment.getReservation().getId(),
+                "message", "Estado del intent obtenido correctamente."
+        );
+    }
+
+    // ==============================================================
+    // 🔹 4️⃣ Obtener todos los pagos (persistidos)
+    // ==============================================================
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
     }
 
+    // ==============================================================
+    // 🔹 5️⃣ Crear un pago real (se usa en /confirm)
+    // ==============================================================
     @Transactional
     public Payment createPayment(Long reservationId, Double amount, String method) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + reservationId));
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada con id: " + reservationId));
 
         Payment payment = new Payment();
         payment.setReservation(reservation);
@@ -118,11 +146,15 @@ public class PaymentService {
 
         paymentRepository.save(payment);
 
+        // Notificar al servicio de completado
         completionService.completePayment(payment.getId());
 
         return payment;
     }
 
+    // ==============================================================
+    // 🔹 6️⃣ Procesar pago de forma asíncrona (simulación)
+    // ==============================================================
     @Async
     @Transactional
     public void processPaymentAsync(Long paymentId) {
