@@ -40,16 +40,16 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/").permitAll()
 
-                        .requestMatchers("/auth/**","/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/api/cars/**").authenticated()
-                        .requestMatchers("/api/reservations/**").authenticated()
-                        .requestMatchers("/api/payments/**").authenticated()
+                        .requestMatchers("/auth/","/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/api/cars/").authenticated()
+                        .requestMatchers("/api/reservations/").authenticated()
+                        .requestMatchers("/api/payments/").authenticated()
 
 
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/client/**").hasRole("CLIENT")
+                        .requestMatchers("/api/admin/").hasRole("ADMIN")
+                        .requestMatchers("/api/client/").hasRole("CLIENT")
 
                         .anyRequest().authenticated()
                 )
@@ -84,7 +84,7 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/", config);
         return source;
     }
 }
