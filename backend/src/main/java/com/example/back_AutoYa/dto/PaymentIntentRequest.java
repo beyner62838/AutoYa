@@ -4,5 +4,4 @@ public record PaymentIntentRequest(
         Long reservationId,
         Double amount,
         String method
-
 ) {}
