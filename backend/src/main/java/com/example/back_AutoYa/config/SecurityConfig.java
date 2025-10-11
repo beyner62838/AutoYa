@@ -33,6 +33,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String corsAllowedOrigins;
 
+    @Value("${cors.allowed-methods}")
+    private String corsAllowedMethods;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -40,23 +43,19 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/").permitAll()
-
-                        .requestMatchers("/auth/","/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/api/cars/").authenticated()
-                        .requestMatchers("/api/reservations/").authenticated()
-                        .requestMatchers("/api/payments/").authenticated()
-
-
-                        .requestMatchers("/api/admin/").hasRole("ADMIN")
-                        .requestMatchers("/api/client/").hasRole("CLIENT")
-
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**", "/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/api/cars/**").authenticated()
+                        .requestMatchers("/api/reservations/**").authenticated()
+                        .requestMatchers("/api/payments/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/client/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
+
 
 
     @Bean
@@ -74,17 +73,21 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
                 .map(String::trim)
-                .collect(Collectors.toList());
+                .toList();
+
+        List<String> methods = Arrays.stream(corsAllowedMethods.split(","))
+                .map(String::trim)
+                .toList();
 
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedMethods(methods);
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/", config);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
