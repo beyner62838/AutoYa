@@ -70,6 +70,7 @@ public class CarPhotoService {
                 .collect(Collectors.toList());
     }
 
+
     @Transactional
     public void delete(Long carId, Long photoId) {
         Car car = carRepository.findById(carId)
