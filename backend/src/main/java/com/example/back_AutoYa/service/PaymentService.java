@@ -5,8 +5,15 @@ import com.example.back_AutoYa.Entities.Enums.PaymentStatus;
 import com.example.back_AutoYa.Entities.Enums.ReservationStatus;
 import com.example.back_AutoYa.Entities.Payment;
 import com.example.back_AutoYa.Entities.Reservation;
+import com.example.back_AutoYa.Entities.User;
+import com.example.back_AutoYa.Mapper.PaymentMapper;
+import com.example.back_AutoYa.Mapper.ReservationMapper;
+import com.example.back_AutoYa.dto.PaymentDTO;
+import com.example.back_AutoYa.dto.ReservationDTO;
 import com.example.back_AutoYa.repository.PaymentRepository;
 import com.example.back_AutoYa.repository.ReservationRepository;
+import com.example.back_AutoYa.repository.UserRepository;
+import com.example.back_AutoYa.utils.ReceiptGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -15,11 +22,13 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +40,7 @@ public class PaymentService {
     private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
     private final CompletionService completionService;
+    private final ReservationService reservationService;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // ==============================================================
@@ -125,9 +135,22 @@ public class PaymentService {
     // ==============================================================
     // 🔹 4️⃣ Obtener todos los pagos (persistidos)
     // ==============================================================
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAll();
+    public List<PaymentDTO> getAllPayments() {
+        List<Payment> payments = paymentRepository.findAll();
+        return PaymentMapper.toDTOList(payments);
     }
+
+    public List<PaymentDTO> getAllPaymentsById(Long userId) {
+        List<ReservationDTO> reservations = reservationService.getAllReservationsById(userId);
+        List<Long> reservationIds = reservations.stream()
+                .map(ReservationDTO::getId)
+                .collect(Collectors.toList());
+
+        List<Payment> payments = paymentRepository.findByReservationIdIn(reservationIds);
+        return PaymentMapper.toDTOList(payments);
+    }
+
+
 
     // ==============================================================
     // 🔹 5️⃣ Crear un pago real (se usa en /confirm)
@@ -143,6 +166,7 @@ public class PaymentService {
         payment.setMethod(PaymentMethod.valueOf(method));
         payment.setStatus(PaymentStatus.PENDING);
         payment.setDate(LocalDate.now());
+
 
         paymentRepository.save(payment);
 

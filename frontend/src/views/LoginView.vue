@@ -39,11 +39,6 @@
         <input v-model="email" type="email" placeholder="Correo electrónico" required autocomplete="email" />
         <input v-model="password" type="password" placeholder="Contraseña" required autocomplete="current-password" />
 
-        <label class="remember">
-          <input type="checkbox" v-model="remember" />
-          Recuérdame
-        </label>
-
         <button type="submit" :disabled="isLoading" class="btn btn-primary">
           <span v-if="!isLoading">Entrar</span>
           <span v-else class="loader"></span>
@@ -52,7 +47,11 @@
         <a class="forgot" href="#">¿Olvidaste tu contraseña?</a>
 
         <p v-if="error" class="error">{{ error }}</p>
-        <p class="terms">Al iniciar sesión aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p>
+        <p class="terms">Al iniciar sesión aceptas nuestros <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Términos</a>
+          y <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Privacidad</a>.
+        </p>
       </form>
     </div>
   </div>
@@ -68,7 +67,6 @@ export default {
     return {
       email: '',
       password: '',
-      remember: false,
       isLoading: false,
       error: '',
       showWelcome: true
@@ -90,7 +88,9 @@ export default {
       try {
         const { data } = await api.post('/auth/login', { email: this.email, password: this.password })
         const token = data.token
+        const userId = data.userId
         localStorage.setItem('token', token)
+        localStorage.setItem('userId', userId)
 
         const userResp = await api.get('/auth/hello', {
           headers: { Authorization: `Bearer ${token}` }

@@ -1,7 +1,9 @@
 package com.example.back_AutoYa.controller;
 
 import com.example.back_AutoYa.Entities.Payment;
+import com.example.back_AutoYa.dto.PaymentDTO;
 import com.example.back_AutoYa.dto.PaymentIntentRequest;
+import com.example.back_AutoYa.dto.ReservationDTO;
 import com.example.back_AutoYa.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,8 +36,13 @@ public class PaymentController {
 
 
     @GetMapping
-    public List<Payment> getAllPayments() {
+    public List<PaymentDTO> getAllPayments() {
         return paymentService.getAllPayments();
+    }
+
+    @GetMapping("/{userId}")
+    public List<PaymentDTO> getAllReservationsById(@PathVariable Long userId) {
+        return paymentService.getAllPaymentsById(userId);
     }
 
     @PostMapping()
@@ -43,7 +50,6 @@ public class PaymentController {
             @RequestParam Long reservationId,
             @RequestParam Double amount,
             @RequestParam String method ) {
-
         return paymentService.createPayment(reservationId, amount, method);
     }
 

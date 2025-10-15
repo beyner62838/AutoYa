@@ -41,7 +41,7 @@
           <select id="category" v-model="newCar.category" required>
             <option value="SEDAN">Sedán</option>
             <option value="SUV">SUV</option>
-            <option value="TRUCK">Camioneta</option>
+            <option value="PICKUP">Camioneta</option>
             <option value="COUPE">Coupé</option>
             <option value="HATCHBACK">Hatchback</option>
             <option value="VAN">Van</option>
