@@ -1,45 +1,76 @@
 <template>
-  <div class="register-bg">
-    <div class="register-container">
-      <form class="register-form" @submit.prevent="register">
+  <div class="page-bg register-bg">
+    <div class="register-card card" role="dialog" aria-labelledby="register-title">
+      
+      <!-- IZQUIERDA -->
+      <div class="left">
+        <div class="brand-row">
+          <span class="brand-icon">🚗</span>
+          <h1 class="brand-name" id="register-title">AutoYa</h1>
+        </div>
+        <p class="tagline">Crea tu cuenta y arranca con estilo.</p>
+
+        <div class="social under-brand">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Twitter/X"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <!-- FORMULARIO -->
+      <form class="form form-dark" @submit.prevent="register" :class="{ loading: loading }">
         <h2>Registrarse</h2>
-        <div class="fields">
-          <div>
-            <label>Nombre</label>
-            <input v-model="registerForm.firstname" required />
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="firstname">Nombre</label>
+            <input id="firstname" v-model="registerForm.firstname" required autocomplete="given-name" />
           </div>
-          <div>
-            <label>Apellido</label>
-            <input v-model="registerForm.lastname" required />
-          </div>
-        </div>
-        <div class="fields">
-          <div>
-            <label>Teléfono</label>
-            <input v-model="registerForm.phone" required />
-          </div>
-          <div>
-            <label>Email</label>
-            <input type="email" v-model="registerForm.email" required />
+          <div class="form-group">
+            <label for="lastname">Apellido</label>
+            <input id="lastname" v-model="registerForm.lastname" required autocomplete="family-name" />
           </div>
         </div>
-        <div class="fields">
-          <div>
-            <label>Contraseña</label>
-            <input type="password" v-model="registerForm.password" required />
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input id="phone" v-model="registerForm.phone" required autocomplete="tel" />
           </div>
-          <div>
-            <label>Rol</label>
-            <select v-model="registerForm.role">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" type="email" v-model="registerForm.email" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input id="password" type="password" v-model="registerForm.password" required autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label for="role">Rol</label>
+            <select id="role" v-model="registerForm.role">
               <option value="CLIENT">Cliente</option>
               <option value="ADMIN">Administrador</option>
             </select>
           </div>
         </div>
-        <button class="primary" type="submit" :disabled="loading">
-          <span v-if="loading" class="loader"></span>
-          <span v-else>Registrarse</span>
-        </button>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" :disabled="loading">
+            <span v-if="loading" class="loader"></span>
+            <span v-else>Registrarse</span>
+          </button>
+          <button class="btn btn-secondary" type="button" @click="$router.push('/login')">
+            Ya tengo cuenta
+          </button>
+        </div>
+
+        <p class="hint">
+          ¿Ya tienes cuenta?
+          <a @click.prevent="$router.push('/login')" href="#">Inicia sesión aquí</a>
+        </p>
       </form>
     </div>
   </div>
@@ -47,8 +78,10 @@
 
 <script>
 import api from '../services/api'
+
 export default {
   name: 'RegisterView',
+  emits: ['show-alert'],
   data() {
     return {
       loading: false,
@@ -70,6 +103,7 @@ export default {
         this.$emit('show-alert', 'success', 'Registro exitoso. Inicia sesión.')
         this.$router.push('/login')
       } catch (err) {
+        console.error(err)
         this.$emit('show-alert', 'error', 'Error al registrarse')
       } finally {
         this.loading = false
@@ -80,107 +114,52 @@ export default {
 </script>
 
 <style scoped>
-.register-bg {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 0;
-}
-.register-container {
-  background: #fff;
-  border-radius: 1.5rem;
-  box-shadow: 0 12px 40px 0 #6366f133;
-  padding: 2.5rem 2rem;
-  min-width: 340px;
-  max-width: 420px;
-  width: 100%;
-  animation: fadeInUp 0.7s;
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px);}
-  to { opacity: 1; transform: none;}
-}
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-.register-form h2 {
-  color: #6366f1;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-.fields {
-  display: flex;
-  gap: 1.2rem;
-}
-.fields > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.register-form label {
-  font-weight: 500;
-  color: #312e81;
-}
-.register-form input,
-.register-form select {
-  border: none;
-  border-bottom: 2px solid #e5e7eb;
-  padding: 0.8rem;
+/* ==== Modo oscuro del formulario ==== */
+.form-dark input,
+.form-dark select {
+  background: #1e293b; /* gris oscuro */
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #0659ff;
+  border-radius: 10px;
+  padding: 12px 14px;
   font-size: 1rem;
+  transition: all 0.25s;
+}
+
+.form-dark input:focus,
+.form-dark select:focus {
   outline: none;
-  background: transparent;
-  transition: border-color 0.2s;
-  border-radius: 0.3rem 0.3rem 0 0;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.25);
+  background: #273549;
 }
-.register-form input:focus,
-.register-form select:focus {
-  border-color: #6366f1;
+
+.form-dark label {
+  color: #cbd5e1;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
-.primary {
-  background: linear-gradient(90deg, #6366f1 60%, #a5b4fc 100%);
+
+.form-dark select option {
+  background-color: #1e293b;
+  color: #e5e7eb;
+}
+
+.form-dark input::placeholder {
+  color: #9ca3af;
+}
+
+.form-dark h2 {
+  color: #c7d2fe;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.hint a {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+.hint a:hover {
   color: #fff;
-  border: none;
-  padding: 0.9rem;
-  border-radius: 0.7rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  position: relative;
-  overflow: hidden;
-  font-weight: 600;
-}
-.primary:disabled {
-  background: #a5b4fc;
-  cursor: not-allowed;
-}
-.loader {
-  display: inline-block;
-  width: 22px;
-  height: 22px;
-  border: 3px solid #fff;
-  border-top: 3px solid #6366f1;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@media (max-width: 500px) {
-  .register-container {
-    padding: 1.2rem 0.5rem;
-    border-radius: 1rem;
-    min-width: unset;
-    max-width: 98vw;
-  }
-  .fields {
-    flex-direction: column;
-    gap: 0.7rem;
-  }
 }
 </style>

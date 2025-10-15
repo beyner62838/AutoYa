@@ -1,44 +1,23 @@
 <template>
-  <div class="car-list">
-    <transition-group name="fade" tag="div">
-      <CarCard
-        v-for="car in cars"
-        :key="car.id"
-        :car="car"
-        @click="$emit('select', car)"
-      />
-    </transition-group>
-  </div>
+  <!-- Usamos la grid global + transición fade global -->
+  <transition-group name="fade" tag="div" class="grid mt-2">
+    <CarCard
+      v-for="car in cars"
+      :key="car.id"
+      :car="car"
+      @select="$emit('select', car)"
+    />
+  </transition-group>
 </template>
 
 <script>
 import CarCard from './CarCard.vue'
 
 export default {
+  name: 'CarList',
+  components: { CarCard },
   props: {
-    cars: {
-      type: Array,
-      required: true
-    }
-  },
-  components: {
-    CarCard
+    cars: { type: Array, required: true }
   }
 }
 </script>
-
-<style scoped>
-.car-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-.fade-enter-active, .fade-leave-active {
-  transition: all 0.4s;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-</style>
