@@ -66,11 +66,6 @@
             Ya tengo cuenta
           </button>
         </div>
-
-        <p class="hint">
-          ¿Ya tienes cuenta?
-          <a @click.prevent="$router.push('/login')" href="#">Inicia sesión aquí</a>
-        </p>
       </form>
     </div>
   </div>

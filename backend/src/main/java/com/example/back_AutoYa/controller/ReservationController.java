@@ -23,6 +23,11 @@ public class ReservationController {
         return reservationService.getAllReservations();
     }
 
+    @GetMapping("/{userId}")
+    public List<ReservationDTO> getAllReservationsById(@PathVariable Long userId) {
+        return reservationService.getAllReservationsById(userId);
+    }
+
     @PostMapping("/block-date")
     public ReservationDTO blockDateAndSetPrice(@RequestBody BlockDateDTO dto) {
         return reservationService.blockDateAndSetPrice(dto);

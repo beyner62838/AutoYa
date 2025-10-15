@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,11 @@ public class ReservationService {
         List<Reservation> allReservations = reservationRepository.findAll();
 
         return ReservationMapper.toDTOList(allReservations);
+    }
+
+    public List<ReservationDTO> getAllReservationsById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return ReservationMapper.toDTOList(user.get().getReservations());
     }
 
     public Long selectAndHoldReservation(Long carId, Long clientId){

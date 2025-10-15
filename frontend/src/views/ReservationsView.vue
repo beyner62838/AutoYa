@@ -31,7 +31,7 @@
           <tbody>
             <tr v-for="r in reservations" :key="r.id">
               <td>{{ r.id }}</td>
-              <td>{{ r.carBrand }} {{ r.carModel }}</td>
+              <td>{{ r.car.brand }} {{ r.car.model }}</td>
               <td>{{ formatDate(r.startDate) }}</td>
               <td>{{ formatDate(r.endDate) }}</td>
               <td>{{ formatMoney(r.totalPrice) }}</td>
@@ -43,7 +43,7 @@
               <td>
                 <button
                   class="btn btn-success"
-                  v-if="r.status === 'PENDING'"
+                  v-if="r.status === 'IN_PROGRESS'"
                   @click="createPayment(r)"
                 >
                   Pagar
@@ -66,17 +66,19 @@ export default {
     return { reservations: [] }
   },
   mounted() {
-    this.loadReservations()
+    const userId = localStorage.getItem('userId')
+    this.loadReservations(userId)
   },
   methods: {
-    async loadReservations() {
+    async loadReservations(userId) {
       try {
-        const resp = await api.get('/api/reservations')
+        const resp = await api.get(`/api/reservations/${userId}`)
         this.reservations = resp.data
       } catch {
         this.$emit('show-alert', 'error', 'Error al cargar reservas')
       }
-    },
+    }
+,
     formatDate(d) {
       if (!d) return ''
       return new Date(d).toLocaleDateString('es-ES', {
@@ -107,7 +109,7 @@ export default {
       const method = prompt('Método de pago (CREDIT_CARD, DEBIT_CARD, CASH, TRANSFER):')
       if (!method) return
       try {
-        await api.post('/api/payments', null, {
+        await api.post('/api/payment', null, {
           params: {
             reservationId: res.id,
             amount: res.totalPrice,

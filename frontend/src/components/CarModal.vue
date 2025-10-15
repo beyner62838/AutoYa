@@ -23,7 +23,7 @@
 
       <!-- Reserva -->
       <div class="card">
-        <h3 class="section-title" style="-webkit-text-fill-color:initial;color:#0f172a;background:none">
+        <h3 class="section-title" style="-webkit-text-fill-color:initial;color: #FFFFFF;background:none">
           Hacer Reserva
         </h3>
 
@@ -46,13 +46,8 @@
           <button class="btn btn-primary" type="button" @click="checkAvailability">
             Verificar Disponibilidad
           </button>
-          <button
-            class="btn btn-success"
-            type="button"
-            :disabled="!available || nights <= 0"
-            v-if="available"
-            @click="confirmReservation"
-          >
+          <button class="btn btn-success" type="button" :disabled="!available || nights <= 0" v-if="available"
+            @click="confirmReservation">
             Confirmar Reserva
           </button>
         </div>

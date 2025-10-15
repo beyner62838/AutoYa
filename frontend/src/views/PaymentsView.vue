@@ -11,7 +11,7 @@
           <td>{{ p.reservationId }}</td>
           <td>${{ p.amount }}</td>
           <td>{{ p.method }}</td>
-          <td>{{ formatDate(p.paymentDate) }}</td>
+          <td>{{ formatDate(p.date) }}</td>
         </tr>
       </tbody>
     </table>
@@ -26,12 +26,13 @@ export default {
     return { payments: [] }
   },
   mounted() {
-    this.loadPayments()
+    const userId = localStorage.getItem('userId')
+    this.loadPayments(userId)
   },
   methods: {
-    async loadPayments() {
+    async loadPayments(userId) {
       try {
-        const resp = await api.get('/api/payments')
+        const resp = await api.get(`/api/payment/${userId}`)
         this.payments = resp.data
       } catch {
         this.$emit('show-alert', 'error', 'Error al cargar pagos')
