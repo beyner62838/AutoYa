@@ -62,6 +62,20 @@ services:
     volumes:
       - minio_data:/data
 
+  # 👇 Servicio para configurar política pública automáticamente
+  minio-setup:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5 &&
+      mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb -p myminio/autoya-dev || true &&
+      mc anonymous set download myminio/autoya-dev &&
+      echo '✅ Bucket autoya-dev público listo.'
+      "
+
 volumes:
   postgres_data:
   redis_data:
