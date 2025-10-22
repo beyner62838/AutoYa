@@ -1,5 +1,6 @@
 <template>
   <div class="cars-page">
+    <!-- Elimina la alerta local aquí -->
     <!-- Filtros -->
     <section class="card">
       <div class="section-header">
@@ -93,10 +94,16 @@
     </div>
 
     <!-- Modales -->
-    <CarModal v-if="showCarModal" :car="selectedCar" :userInfo="userInfo" @close="closeModal" @show-alert="showAlert"
-      @reserved="onReserved" />
-    <AddCarModal v-if="showAdd" :userInfo="userInfo" @close="showAdd = false" @car-added="onCarAdded"
-      @show-alert="showAlert" />
+    <CarModal 
+      v-if="showCarModal" 
+      :car="selectedCar" 
+      :userInfo="userInfo" 
+      @close="closeModal" 
+      @show-alert="(type, msg) => $emit('show-alert', type, msg)"
+      @reserved="onReserved" 
+    />
+    <AddCarModal v-if="showAdd" :userInfo="userInfo" :car="editCar" @close="() => { showAdd = false; editCar = null }"
+      @car-added="onCarAdded" @car-updated="onCarUpdated" @show-alert="showAlert" />
   </div>
 </template>
 
@@ -122,7 +129,14 @@ export default {
       minPrice: null,
       maxPrice: null,
       sliderMin: 0,
-      sliderMax: 0
+      sliderMax: 0,
+      editCar: null,
+      alert: {
+        visible: false,
+        type: 'info', // 'success' | 'error' | 'info'
+        msg: '',
+        timeoutId: null
+      }
     }
   },
   async mounted() {
@@ -200,6 +214,7 @@ export default {
       this.maxPrice = this.sliderMax
       localStorage.removeItem('cars_min_price')
       localStorage.removeItem('cars_max_price')
+       this.clearSort()
       this.searchDates.startDate = ''
       this.searchDates.endDate = ''
       this.getAllCars()
@@ -214,14 +229,14 @@ export default {
         const res = await api.get('/api/cars')
         this.cars = res.data
       } catch {
-        this.showAlert('error', 'Error al cargar autos')
+        this.$emit('show-alert', 'error', 'Error al cargar autos')
       } finally {
         this.loading = false
       }
     },
     async searchAvailableCars() {
       if (!this.searchDates.startDate || !this.searchDates.endDate)
-        return this.showAlert('error', 'Por favor selecciona ambas fechas')
+        return this.$emit('show-alert', 'error', 'Por favor selecciona ambas fechas')
 
       this.loading = true
       try {
@@ -229,16 +244,22 @@ export default {
           params: this.searchDates
         })
         this.cars = res.data
-        this.showAlert('success', `Se encontraron ${this.cars.length} autos`)
+        this.$emit('show-alert', 'success', `Se encontraron ${this.cars.length} autos`)
       } catch {
-        this.showAlert('error', 'Error al buscar autos disponibles')
+        this.$emit('show-alert', 'error', 'Error al buscar autos disponibles')
       } finally {
         this.loading = false
       }
     },
     selectCar(car) {
-      this.selectedCar = car
-      this.showCarModal = true
+      // Si es ADMIN, abrir el modal de edición; si no, abrir el modal de detalles (reserva)
+      if (this.userInfo?.role === 'ADMIN') {
+        this.editCar = car
+        this.showAdd = true
+      } else {
+        this.selectedCar = car
+        this.showCarModal = true
+      }
     },
     closeModal() {
       this.showCarModal = false
@@ -250,10 +271,25 @@ export default {
     },
     onCarAdded(car) {
       this.cars.unshift(car)
+      this.getAllCars()
     },
+    // Manejar actualizaciones desde AddCarModal
+    async onCarUpdated(updated) {
+      // recargar lista para asegurar consistencia
+      await this.getAllCars()
+    },
+    // Mostrar alerta local y autohide
     showAlert(type, msg) {
       this.$emit('show-alert', type, msg)
-    }
+    },
+
+    hideAlert() {
+      if (this.alert.timeoutId) {
+        clearTimeout(this.alert.timeoutId)
+        this.alert.timeoutId = null
+      }
+      this.alert.visible = false
+    },
   }
 }
 </script>
@@ -502,7 +538,9 @@ input[type="date"]:focus {
   transform: scale(1.15);
 }
 
-/* Responsive */
+/* Estilos de la alerta (encajar con paleta: azules y fondo oscuro) */
+
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;

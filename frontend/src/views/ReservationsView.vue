@@ -5,7 +5,7 @@
         <h2>Mis Reservas</h2>
 
         <button class="btn btn-primary pay-all-btn" @click="goToPayment">
-          💳 Pagar Reserva
+          💳 ¿Como pagar una reserva?
         </button>
       </div>
 
@@ -54,6 +54,34 @@
         </table>
       </div>
     </section>
+
+    <!-- CUSTOM PROMPT: Método de pago -->
+    <div v-if="promptVisible" class="custom-prompt-overlay" role="dialog" aria-modal="true" @keydown.esc="cancelPrompt">
+      <div class="custom-prompt" tabindex="-1" ref="prompt">
+        <div class="prompt-title">
+          <h3>Método de pago</h3>
+          <small>Elige una opción</small>
+        </div>
+
+        <ul class="prompt-list">
+          <li v-for="opt in promptOptions" :key="opt.value"
+              class="prompt-option"
+              :class="{ selected: selectedOption === opt.value }"
+              tabindex="0"
+              @click="selectOption(opt.value)"
+              @keydown.enter.prevent="selectOption(opt.value)"
+              @keydown.space.prevent="selectOption(opt.value)">
+            <span>{{ opt.label }}</span>
+            <span class="meta">{{ opt.desc }}</span>
+          </li>
+        </ul>
+
+        <div class="prompt-actions">
+          <button class="btn btn-cancel" @click="cancelPrompt" type="button">Cancelar</button>
+          <button class="btn btn-confirm" :disabled="!selectedOption" @click="confirmPayment" type="button">Confirmar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -63,7 +91,19 @@ import api from '../services/api'
 export default {
   name: 'ReservationsView',
   data() {
-    return { reservations: [] }
+    return {
+      reservations: [],
+     // Prompt state
+     promptVisible: false,
+     promptOptions: [
+       { value: 'CREDIT_CARD', label: 'Tarjeta de Crédito'},
+       { value: 'DEBIT_CARD', label: 'Tarjeta de Débito'},
+       { value: 'CASH', label: 'Efectivo'},
+       { value: 'TRANSFER', label: 'Transferencia'}
+     ],
+     selectedOption: null,
+     pendingReservation: null
+    }
   },
   mounted() {
     const userId = localStorage.getItem('userId')
@@ -71,43 +111,71 @@ export default {
   },
   methods: {
     async loadReservations(userId) {
-      try {
-        const resp = await api.get(`/api/reservations/${userId}`)
-        this.reservations = resp.data
-      } catch {
-        this.$emit('show-alert', 'error', 'Error al cargar reservas')
-      }
-    }
+      // permitir llamada sin parámetro, usar localStorage por defecto
+      const uid = userId || localStorage.getItem('userId')
+       try {
+         const resp = await api.get(`/api/reservations/${userId}`)
+         this.reservations = resp.data
+       } catch {
+         this.$emit('show-alert', 'error', 'Error al cargar reservas')
+       }
+     }
 ,
-    formatDate(d) {
-      if (!d) return ''
-      return new Date(d).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit'
+     formatDate(d) {
+       if (!d) return ''
+       return new Date(d).toLocaleDateString('es-ES', {
+         year: 'numeric',
+         month: 'short',
+         day: '2-digit'
+       })
+     },
+     formatMoney(n) {
+       try {
+         return new Intl.NumberFormat('es-CO', {
+           style: 'currency',
+           currency: 'COP',
+           maximumFractionDigits: 0
+         }).format(Number(n || 0))
+       } catch {
+         return `$${n}`
+       }
+     },
+     statusClass(s) {
+       const v = String(s || '').toUpperCase()
+       if (v === 'PENDING') return 'badge-pending'
+       if (v === 'PAID' || v === 'COMPLETED') return 'badge-paid'
+       if (v === 'CANCELLED' || v === 'CANCELED') return 'badge-cancel'
+       return 'badge-neutral'
+     },
+    // Abrir prompt personalizado para la reserva seleccionada
+    createPayment(res) {
+      this.pendingReservation = res
+      this.selectedOption = null
+      this.promptVisible = true
+      this.$nextTick(() => {
+        // focus modal for accessibility
+        this.$refs.prompt?.focus?.()
       })
     },
-    formatMoney(n) {
-      try {
-        return new Intl.NumberFormat('es-CO', {
-          style: 'currency',
-          currency: 'COP',
-          maximumFractionDigits: 0
-        }).format(Number(n || 0))
-      } catch {
-        return `$${n}`
-      }
+
+    // selección en la lista
+    selectOption(val) {
+      this.selectedOption = val
     },
-    statusClass(s) {
-      const v = String(s || '').toUpperCase()
-      if (v === 'PENDING') return 'badge-pending'
-      if (v === 'PAID' || v === 'COMPLETED') return 'badge-paid'
-      if (v === 'CANCELLED' || v === 'CANCELED') return 'badge-cancel'
-      return 'badge-neutral'
+
+    // cancelar prompt
+    cancelPrompt() {
+      this.promptVisible = false
+      this.selectedOption = null
+      this.pendingReservation = null
     },
-    async createPayment(res) {
-      const method = prompt('Método de pago (CREDIT_CARD, DEBIT_CARD, CASH, TRANSFER):')
-      if (!method) return
+
+    // confirmar y enviar pago
+    async confirmPayment() {
+      if (!this.pendingReservation || !this.selectedOption) return
+      const res = this.pendingReservation
+      const method = this.selectedOption
+      this.promptVisible = false
       try {
         await api.post('/api/payment', null, {
           params: {
@@ -117,16 +185,26 @@ export default {
           }
         })
         this.$emit('show-alert', 'success', 'Pago procesado')
-        this.loadReservations()
+        await this.sleep(500)
+        this.$router.push('/payments')
       } catch {
         this.$emit('show-alert', 'error', 'Error al procesar pago')
+      } finally {
+        this.pendingReservation = null
+        this.selectedOption = null
       }
     },
-    goToPayment() {
-      alert('Selecciona una reserva pendiente y presiona “Pagar” para continuar.')
-    }
-  }
-}
+ 
+     // Helper sleep reutilizable
+     sleep(ms) {
+       return new Promise(resolve => setTimeout(resolve, ms))
+     },
+ 
+     goToPayment() {
+       this.$emit('show-alert', 'info', 'Selecciona una reserva pendiente y presiona “Pagar” para continuar.')
+     }
+   }
+ }
 </script>
 
 <style scoped>
@@ -283,6 +361,105 @@ export default {
     content: attr(data-label) ": ";
     color: #94a3b8;
     font-weight: 600;
+  }
+}
+
+/* ===== CUSTOM PROMPT ===== */
+.custom-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.custom-prompt {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: slide-in 0.4s ease-out;
+}
+.prompt-title {
+  margin-bottom: 16px;
+}
+.prompt-title h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
+.prompt-title small {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+.prompt-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+.prompt-option {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.prompt-option.selected {
+  background: rgba(34, 197, 94, 0.2);
+  font-weight: 700;
+}
+.prompt-actions {
+  display: flex;
+  justify-content: space-between;
+}
+.btn-cancel {
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.btn-cancel:hover {
+  background: rgba(239, 68, 68, 1);
+}
+.btn-confirm {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.btn-confirm:disabled {
+  background: rgba(37, 99, 235, 0.5);
+  cursor: not-allowed;
+}
+.btn-confirm:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+/* Animaciones */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

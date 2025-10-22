@@ -52,15 +52,34 @@
           </button>
         </div>
       </div>
+
+      <!-- Sección de calificaciones -->
+      <div class="card">
+        <RatingSection 
+          :carId="car.id" 
+          @show-alert="handleShowAlert"
+        />
+      </div>
+
+      <!-- Botón de reserva -->
+      <div class="actions" v-if="userInfo && userInfo.role !== 'ADMIN'">
+        <button class="btn btn-primary" @click="reserve">
+          Reservar ahora
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import api from '../services/api'
+import RatingSection from './RatingSection.vue'
 
 export default {
   name: 'CarModal',
+  components: {
+    RatingSection
+  },
   emits: ['close','show-alert','reserved'],
   props: {
     car: { type: Object, required: true },
@@ -135,7 +154,152 @@ export default {
       } catch {
         this.$emit('show-alert', 'error', 'Error al crear reserva')
       }
+    },
+    reserve() {
+      this.$emit('reserved')
+    },
+    handleShowAlert(type, message) {
+      this.$emit('show-alert', type, message)
     }
   }
 }
 </script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #1e293b;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.card {
+  background: #2a3748;
+  border-radius: 8px;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  color: #fff;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+input[type="date"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: #1e293b;
+  color: #fff;
+}
+
+input[type="date"]::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.flex {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #007bff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-success {
+  background: #28a745;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.actions {
+  margin-top: 1rem;
+  text-align: right;
+}
+
+.car-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.car-image {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.car-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.car-info {
+  color: #fff;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+}
+</style>
