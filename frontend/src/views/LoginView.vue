@@ -97,14 +97,19 @@ export default {
         })
 
         this.$emit('auth-changed', { isAuthenticated: true, userInfo: userResp.data })
-        this.$router.push('/cars')
         this.$emit('show-alert', 'success', 'Inicio de sesión exitoso')
+        await this.sleep(700)
+        this.$router.push('/cars')
       } catch (e) {
         this.error = 'Credenciales incorrectas. Intenta de nuevo.'
         this.$emit('show-alert', 'error', 'Error al iniciar sesión')
       } finally {
         this.isLoading = false
       }
+    },
+
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     }
   }
 }
