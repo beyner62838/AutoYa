@@ -29,12 +29,12 @@
 
         <div class="form-group">
           <label for="start">Fecha Inicio</label>
-          <input id="start" type="date" v-model="startDate" />
+          <input id="start" type="date" v-model="startDate" :min="today" />
         </div>
 
         <div class="form-group">
           <label for="end">Fecha Fin</label>
-          <input id="end" type="date" v-model="endDate" />
+          <input id="end" type="date" v-model="endDate" :min="startDate || today" />
         </div>
 
         <div class="mb-2" v-if="nights > 0">
@@ -42,27 +42,42 @@
           <strong>Total estimado:</strong> ${{ totalEstimated }}
         </div>
 
+        <!-- Estado de disponibilidad -->
+        <div class="mb-2" aria-live="polite">
+          <span v-if="available === true" class="badge ok">Disponible</span>
+          <span v-else-if="available === false" class="badge bad">No disponible</span>
+        </div>
+
         <div class="flex gap-2">
           <button class="btn btn-primary" type="button" @click="checkAvailability">
             Verificar Disponibilidad
           </button>
-          <button class="btn btn-success" type="button" :disabled="!available || nights <= 0" v-if="available"
+
+          <!-- Mostrar SOLO si hay disponibilidad y noches > 0 -->
+          <button class="btn btn-success" type="button" v-if="available === true && nights > 0"
             @click="confirmReservation">
             Confirmar Reserva
           </button>
+        </div>
+
+        <!-- Sugerencia de próxima fecha disponible -->
+        <div class="mt-2" v-if="available === false && nextAvailableStartDate.length > 0">
+          <small class="text-muted">
+            Las próxima(s) fecha(s) disponible(s) para reservar desde el {{ nextAvailableStartDate[0] }}
+            hasta el {{ nextAvailableEndDate[0] }}
+            <span v-if="nextAvailableStartDate[1]"> y desde el {{ nextAvailableStartDate[1] }}
+              hasta el {{ nextAvailableEndDate[1] }}</span>
+          </small>
         </div>
       </div>
 
       <!-- Sección de calificaciones -->
       <div class="card">
-        <RatingSection 
-          :carId="car.id" 
-          @show-alert="handleShowAlert"
-        />
+        <RatingSection :carId="car.id" @show-alert="handleShowAlert" />
       </div>
 
-      <!-- Botón de reserva -->
-      <div class="actions" v-if="userInfo && userInfo.role !== 'ADMIN'">
+      <!-- Botón de reserva (opcional): visible solo si hay disponibilidad -->
+      <div class="actions" v-if="userInfo && userInfo.role !== 'ADMIN' && available === true && nights > 0">
         <button class="btn btn-primary" @click="reserve">
           Reservar ahora
         </button>
@@ -80,7 +95,7 @@ export default {
   components: {
     RatingSection
   },
-  emits: ['close','show-alert','reserved'],
+  emits: ['close', 'show-alert', 'reserved'],
   props: {
     car: { type: Object, required: true },
     userInfo: { type: Object }
@@ -89,7 +104,11 @@ export default {
     return {
       startDate: '',
       endDate: '',
-      available: false
+      available: null,
+      today: new Date().toISOString().slice(0, 10),
+      nextAvailableStartDate: [],
+      nextAvailableEndDate: []
+
     }
   },
   computed: {
@@ -98,8 +117,9 @@ export default {
       const s = new Date(this.startDate)
       const e = new Date(this.endDate)
       const ms = e - s
-      const d = Math.ceil(ms / (1000 * 60 * 60 * 24))
-      return isNaN(d) || d <= 0 ? 0 : d
+      let d = Math.floor(ms / (1000 * 60 * 60 * 24))
+      if (d <= 0) d = 1
+      return isNaN(d) ? 0 : d
     },
     totalEstimated() {
       if (this.nights <= 0 || !this.car?.pricePerDay) return 0
@@ -110,31 +130,111 @@ export default {
       }
     }
   },
+  watch: {
+    startDate() { this.available = [] },
+    endDate() { this.available = [] }
+  },
   methods: {
+
+    formatDateLocal(d) {
+      if (!d) return ''
+      // Espera 'YYYY-MM-DD' o 'YYYY-MM-DDTHH:mm:ssZ'
+      const dateStr = d.split('T')[0]
+      const [y, m, day] = String(dateStr).split('-')
+      const months = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      ]
+      const monthName = months[parseInt(m, 10) - 1] || m
+      return `${day} ${monthName} ${y}`
+    },
     async checkAvailability() {
-      this.available = false
+      this.available = null
+      this.nextAvailableStartDate = []
+      this.nextAvailableEndDate = []
+
       if (!this.startDate || !this.endDate) {
         this.$emit('show-alert', 'error', 'Selecciona ambas fechas')
+        this.available = false
         return
       }
-      if (this.nights <= 0) {
+
+      if (this.nights < 0) {
         this.$emit('show-alert', 'error', 'La fecha fin debe ser posterior a la fecha inicio')
+        this.available = false
         return
       }
+
       try {
         const resp = await api.get(`/api/cars/${this.car.id}/availability`, {
           params: { from: this.startDate, to: this.endDate }
         })
-        // Soporta booleano o lista (true / length>0)
-        const data = resp?.data
-        this.available = Boolean(data?.available ?? (Array.isArray(data) ? data.length > 0 : data))
-        this.$emit('show-alert', this.available ? 'success' : 'error', this.available ? 'Disponible' : 'No disponible')
-      } catch {
+        const data = resp.data
+
+        console.log('[DEBUG] checkAvailability:', {
+          carId: this.car.id,
+          from: this.startDate,
+          to: this.endDate,
+          response: data
+        })
+
+        if (Array.isArray(data)) {
+          const found = data.find(a =>
+            a.startDate <= this.startDate && a.endDate >= this.endDate
+          )
+          
+          this.available = !!found
+
+          console.log('[DEBUG] Disponibilidad encontrada:', !!found)
+
+          if (!this.available && data.length > 0) {
+            // ✅ Filtrar solo los rangos realmente disponibles DESPUÉS del rango seleccionado
+            const limitedData = data
+              .filter(a => new Date(a.startDate) >= new Date(this.endDate))
+              .slice(0, 2)
+
+            this.nextAvailableStartDate = []
+            this.nextAvailableEndDate = []
+
+            for (let i = 0; i < data.length; i++) {
+              this.nextAvailableStartDate.push(this.formatDateLocal(data[i].startDate))
+              this.nextAvailableEndDate.push(this.formatDateLocal(data[i].endDate))
+            }
+
+            console.warn("debug")
+            console.log('[DEBUG] Fechas sugeridas:', {
+              nextAvailableStartDate: this.nextAvailableStartDate,
+              nextAvailableEndDate: this.nextAvailableEndDate
+            })
+
+            // ✅ Mostrar mensaje según cantidad de fechas sugeridas
+            const message = `No disponible. Dentro del rango seleccionado la próxima fecha disponible es del ${this.nextAvailableStartDate[0]} hasta el ${this.nextAvailableEndDate[0]}`
+              + (data[1]
+                ? ` y desde el ${this.nextAvailableStartDate[1]} hasta el ${this.nextAvailableEndDate[1]}`
+                : '')
+
+            this.$emit('show-alert', 'error', message)
+            return
+          }else {
+            this.nextAvailableStartDate = []
+            this.nextAvailableEndDate = []
+            this.$emit('show-alert', 'success', 'Disponible')
+          }
+        }
+
+
+        
+        
+
+      } catch (err) {
+        console.log('[DEBUG] checkAvailability error:', err)
+        this.available = false
         this.$emit('show-alert', 'error', 'Error al verificar disponibilidad')
       }
     },
+
     async confirmReservation() {
-      if (!this.available || this.nights <= 0) return
+      if (this.available !== true || this.nights <= 0) return
       try {
         const clientId = this.userInfo?.id || localStorage.getItem('userId')
         if (!clientId) {
@@ -156,7 +256,9 @@ export default {
       }
     },
     reserve() {
-      this.$emit('reserved')
+      if (this.available === true && this.nights > 0) {
+        this.$emit('reserved')
+      }
     },
     handleShowAlert(type, message) {
       this.$emit('show-alert', type, message)
@@ -301,5 +403,24 @@ input[type="date"]::placeholder {
   font-size: 1.5rem;
   color: #fff;
   cursor: pointer;
+}
+
+/* Etiquetas de estado */
+.badge {
+  pointer-events: none;
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.badge.ok {
+  background: #1f8f36;
+  color: #fff;
+}
+
+.badge.bad {
+  background: #b3261e;
+  color: #fff;
 }
 </style>

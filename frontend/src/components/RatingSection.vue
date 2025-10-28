@@ -57,7 +57,6 @@ watch(reviews, (val) => {
 
 function addReview() {
     if (!rating.value) {
-        console.log('Calificar de 1 a 5 estrellas antes de publicar.')
         emit('show-alert', 'error', 'Añade una calificación antes de publicar')
         return
     }
