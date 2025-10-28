@@ -33,58 +33,24 @@
       </div>
 
       <!-- FORMULARIO -->
-      <form class="form" @submit.prevent="handleLogin" :class="{ 'loading': isLoading }" novalidate>
+      <form class="form" @submit.prevent="handleLogin" :class="{ 'loading': isLoading }">
         <h2 class="form-title">Iniciar Sesión</h2>
 
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Correo electrónico"
-          required
-          autocomplete="email"
-          inputmode="email"
-          @blur="email = email.trim(); emailTouched = true"
-          @input="emailTouched = true"
-          :aria-invalid="emailTouched && !isEmailValid"
-          title="Ingresa un correo válido (ej: nombre@dominio.com)"
-        />
+        <input v-model="email" type="email" placeholder="Correo electrónico" required autocomplete="email" />
+        <input v-model="password" type="password" placeholder="Contraseña" required autocomplete="current-password" />
 
-        <input
-          v-model="password"
-          :type="showPassword ? 'text' : 'password'"
-          placeholder="Contraseña"
-          required
-          autocomplete="current-password"
-          minlength="6"
-          @input="password = password.replace(/\s/g, ''); passwordTouched = true"
-          :aria-invalid="passwordTouched && !isPasswordValid"
-          title="Mínimo 6 caracteres, sin espacios"
-        />
-
-        <div class="row-between">
-          <label class="show-pass">
-            <input type="checkbox" v-model="showPassword" />
-            Mostrar contraseña
-          </label>
-          <a class="forgot" href="#">¿Olvidaste tu contraseña?</a>
-        </div>
-
-        <button
-          type="submit"
-          :disabled="isLoading || !isFormValid"
-          class="btn btn-primary"
-          :aria-disabled="isLoading || !isFormValid"
-        >
+        <button type="submit" :disabled="isLoading" class="btn btn-primary">
           <span v-if="!isLoading">Entrar</span>
           <span v-else class="loader"></span>
         </button>
 
-        <p v-if="error" class="error" role="alert">{{ error }}</p>
-        <p class="terms">
-          Al iniciar sesión aceptas nuestros
-          <a href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Términos</a>
-          y
-          <a href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Privacidad</a>.
+        <a class="forgot" href="#">¿Olvidaste tu contraseña?</a>
+
+        <p v-if="error" class="error">{{ error }}</p>
+        <p class="terms">Al iniciar sesión aceptas nuestros <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Términos</a>
+          y <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Privacidad</a>.
         </p>
       </form>
     </div>
@@ -103,22 +69,7 @@ export default {
       password: '',
       isLoading: false,
       error: '',
-      showWelcome: true,
-      showPassword: false,
-      emailTouched: false,
-      passwordTouched: false,
-      emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    }
-  },
-  computed: {
-    isEmailValid() {
-      return this.emailRegex.test(this.email)
-    },
-    isPasswordValid() {
-      return this.password.length >= 6 && !/\s/.test(this.password)
-    },
-    isFormValid() {
-      return this.isEmailValid && this.isPasswordValid
+      showWelcome: true
     }
   },
   mounted() {
@@ -132,27 +83,10 @@ export default {
       sessionStorage.setItem('autoya_welcome_dismissed', '1')
     },
     async handleLogin() {
-      this.error = ''
-
-      // Validaciones previas
-      if (!this.isEmailValid) {
-        this.error = 'El correo electrónico no es válido.'
-        this.$emit('show-alert', 'error', this.error)
-        return
-      }
-      if (!this.isPasswordValid) {
-        this.error = 'La contraseña debe tener al menos 6 caracteres y no contener espacios.'
-        this.$emit('show-alert', 'error', this.error)
-        return
-      }
-
       this.isLoading = true
+      this.error = ''
       try {
-        const { data } = await api.post('/auth/login', {
-          email: this.email.trim(),
-          password: this.password
-        })
-
+        const { data } = await api.post('/auth/login', { email: this.email, password: this.password })
         const token = data.token
         const userId = data.userId
         localStorage.setItem('token', token)
@@ -173,6 +107,7 @@ export default {
         this.isLoading = false
       }
     },
+
     sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms))
     }

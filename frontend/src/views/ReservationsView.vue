@@ -32,8 +32,8 @@
             <tr v-for="r in reservations" :key="r.id">
               <td>{{ r.id }}</td>
               <td>{{ r.car.brand }} {{ r.car.model }}</td>
-              <td>{{ formatDate(r.startDate) }}</td>
-              <td>{{ formatDate(r.endDate) }}</td>
+              <td>{{ formatDateLocal(r.startDate) }}</td>
+              <td>{{ formatDateLocal(r.endDate) }}</td>
               <td>{{ formatMoney(r.totalPrice) }}</td>
               <td>
                 <span class="badge" :class="statusClass(r.status)">
@@ -121,14 +121,18 @@ export default {
        }
      }
 ,
-     formatDate(d) {
-       if (!d) return ''
-       return new Date(d).toLocaleDateString('es-ES', {
-         year: 'numeric',
-         month: 'short',
-         day: '2-digit'
-       })
-     },
+     formatDateLocal(d) {
+      if (!d) return ''
+      // Espera 'YYYY-MM-DD' o 'YYYY-MM-DDTHH:mm:ssZ'
+      const dateStr = d.split('T')[0]
+      const [y, m, day] = dateStr.split('-')
+      const months = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      ]
+      const monthName = months[parseInt(m, 10) - 1] || m
+      return `${day} ${monthName} ${y}`
+    },
      formatMoney(n) {
        try {
          return new Intl.NumberFormat('es-CO', {

@@ -433,7 +433,17 @@ select option { background:#1e293b; color:#e5e7eb; }
   opacity:0.98;
 }
 
-.site-alert-text { flex:1; font-size:15px; line-height:1.2; color:#e6f0ff; }
+.site-alert-text {
+  flex: 1;
+  font-size: 17px;
+  line-height: 1.4;
+  color: #e6f0ff;
+  font-weight: 600;
+  text-align: center;
+  font-family: "Segoe UI", Arial, sans-serif;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.5px;
+}
 .site-alert-msg { white-space:pre-wrap; }
 
 .site-alert-close {

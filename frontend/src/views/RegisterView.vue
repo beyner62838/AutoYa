@@ -1,7 +1,7 @@
 <template>
   <div class="page-bg register-bg">
     <div class="register-card card" role="dialog" aria-labelledby="register-title">
-
+      
       <!-- IZQUIERDA -->
       <div class="left">
         <div class="brand-row">
@@ -24,67 +24,29 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="firstname">Nombre</label>
-            <input
-                id="firstname"
-                v-model="registerForm.firstname"
-                required
-                autocomplete="given-name"
-                pattern="[A-Za-zÀ-ÿ\\s]+"
-                title="Solo se permiten letras y espacios"
-            />
+            <input id="firstname" v-model="registerForm.firstname" required autocomplete="given-name" />
           </div>
-
           <div class="form-group">
             <label for="lastname">Apellido</label>
-            <input
-                id="lastname"
-                v-model="registerForm.lastname"
-                required
-                autocomplete="family-name"
-                pattern="[A-Za-zÀ-ÿ\\s]+"
-                title="Solo se permiten letras y espacios"
-            />
+            <input id="lastname" v-model="registerForm.lastname" required autocomplete="family-name" />
           </div>
         </div>
 
         <div class="form-grid">
           <div class="form-group">
             <label for="phone">Teléfono</label>
-            <input
-                id="phone"
-                v-model="registerForm.phone"
-                required
-                autocomplete="tel"
-                pattern="\\d{7,15}"
-                title="Solo se permiten números (mínimo 7 dígitos)"
-            />
+            <input id="phone" v-model="registerForm.phone" required autocomplete="tel" />
           </div>
-
           <div class="form-group">
             <label for="email">Email</label>
-            <input
-                id="email"
-                type="email"
-                v-model="registerForm.email"
-                required
-                autocomplete="email"
-                title="Ingresa un correo electrónico válido"
-            />
+            <input id="email" type="email" v-model="registerForm.email" required autocomplete="email" />
           </div>
         </div>
 
         <div class="form-grid">
           <div class="form-group">
             <label for="password">Contraseña</label>
-            <input
-                id="password"
-                type="password"
-                v-model="registerForm.password"
-                required
-                minlength="6"
-                autocomplete="new-password"
-                title="Debe tener al menos 6 caracteres"
-            />
+            <input id="password" type="password" v-model="registerForm.password" required autocomplete="new-password" />
           </div>
           <div class="form-group">
             <label for="role">Rol</label>
@@ -130,29 +92,6 @@ export default {
   },
   methods: {
     async register() {
-      // === VALIDACIONES MANUALES ===
-      if (!/^[A-Za-zÀ-ÿ\s]+$/.test(this.registerForm.firstname)) {
-        this.$emit('show-alert', 'error', 'El nombre solo puede contener letras.')
-        return
-      }
-      if (!/^[A-Za-zÀ-ÿ\s]+$/.test(this.registerForm.lastname)) {
-        this.$emit('show-alert', 'error', 'El apellido solo puede contener letras.')
-        return
-      }
-      if (!/^\d{10}$/.test(this.registerForm.phone)) {
-        this.$emit('show-alert', 'error', 'El teléfono debe tener 10 dígitos numéricos.')
-        return
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.registerForm.email)) {
-        this.$emit('show-alert', 'error', 'El correo electrónico no es válido.')
-        return
-      }
-      if (this.registerForm.password.length < 4) {
-        this.$emit('show-alert', 'error', 'La contraseña debe tener al menos 4 caracteres.')
-        return
-      }
-
-      // === ENVÍO AL BACKEND ===
       this.loading = true
       try {
         await api.post('/auth/register', this.registerForm)
@@ -160,7 +99,7 @@ export default {
         this.$router.push('/login')
       } catch (err) {
         console.error(err)
-        this.$emit('show-alert', 'error', 'Error al registrarse.')
+        this.$emit('show-alert', 'error', 'Error al registrarse')
       } finally {
         this.loading = false
       }
@@ -170,9 +109,10 @@ export default {
 </script>
 
 <style scoped>
+/* ==== Modo oscuro del formulario ==== */
 .form-dark input,
 .form-dark select {
-  background: #1e293b;
+  background: #1e293b; /* gris oscuro */
   border: 1px solid rgba(148, 163, 184, 0.25);
   color: #0659ff;
   border-radius: 10px;
@@ -180,6 +120,7 @@ export default {
   font-size: 1rem;
   transition: all 0.25s;
 }
+
 .form-dark input:focus,
 .form-dark select:focus {
   outline: none;
@@ -187,23 +128,28 @@ export default {
   box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.25);
   background: #273549;
 }
+
 .form-dark label {
   color: #cbd5e1;
   font-weight: 700;
   margin-bottom: 4px;
 }
+
 .form-dark select option {
   background-color: #1e293b;
   color: #e5e7eb;
 }
+
 .form-dark input::placeholder {
   color: #9ca3af;
 }
+
 .form-dark h2 {
   color: #c7d2fe;
   font-weight: 800;
   margin-bottom: 8px;
 }
+
 .hint a {
   color: #93c5fd;
   text-decoration: underline;
