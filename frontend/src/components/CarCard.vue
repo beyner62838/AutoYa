@@ -3,7 +3,11 @@
     :aria-label="`Ver detalles de ${car.brand} ${car.model}`">
     <!-- Imagen del auto -->
     <div class="media">
-      <img :src="photoUrl || placeholder" alt="Imagen del vehículo" class="media-img" loading="lazy" />
+      <!-- Mostrar GIF si está cargando -->
+      <img v-if="loading" src="../assets/loading.gif" alt="Cargando..." class="media-img loading-gif" />
+
+      <!-- Mostrar imagen del auto si ya cargó -->
+      <img v-else :src="photoUrl || placeholder" alt="Imagen del vehículo" class="media-img" loading="lazy" />
     </div>
 
     <!-- Cuerpo -->
@@ -41,19 +45,17 @@ export default {
   },
   data() {
     return {
-      placeholder: 'https://via.placeholder.com/640x360?text=Auto',
+      placeholder: '', // ya no lo usas como loading
       photos: [],
       loading: false
     }
   },
   computed: {
     photoUrl() {
-      // Devuelve la primera foto si existe
       return this.photos.length > 0 ? this.photos[0].url || this.photos[0] : null
     }
   },
   async mounted() {
-    // Carga la foto de portada del auto
     await this.getCarPhotoCover(this.car.id)
   },
   methods: {
@@ -65,11 +67,14 @@ export default {
       }
     },
     async getCarPhotoCover(carId) {
+      this.loading = true
       try {
         const res = await api.get(`/api/cars/${carId}/photos`)
         this.photos = res.data || []
       } catch {
         console.warn('Error al cargar fotos del auto', carId)
+      } finally {
+        this.loading = false
       }
     }
   }
@@ -95,6 +100,11 @@ export default {
   width: 100%;
   height: 180px;
   object-fit: cover;
+}
+
+.loading-gif {
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .body {
@@ -123,4 +133,3 @@ export default {
   font-size: 0.85rem;
 }
 </style>
-

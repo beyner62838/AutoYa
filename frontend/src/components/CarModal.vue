@@ -179,16 +179,18 @@ export default {
         })
 
         if (Array.isArray(data)) {
+          // Buscar si existe un rango disponible que cubra las fechas seleccionadas
           const found = data.find(a =>
             a.startDate <= this.startDate && a.endDate >= this.endDate
           )
-          
+
           this.available = !!found
 
           console.log('[DEBUG] Disponibilidad encontrada:', !!found)
 
+          // ✅ LÓGICA CORREGIDA
           if (!this.available && data.length > 0) {
-            // ✅ Filtrar solo los rangos realmente disponibles DESPUÉS del rango seleccionado
+            // NO disponible - mostrar fechas alternativas
             const limitedData = data
               .filter(a => new Date(a.startDate) >= new Date(this.endDate))
               .slice(0, 2)
@@ -201,37 +203,38 @@ export default {
               this.nextAvailableEndDate.push(this.formatDateLocal(data[i].endDate))
             }
 
-            console.warn("debug")
             console.log('[DEBUG] Fechas sugeridas:', {
               nextAvailableStartDate: this.nextAvailableStartDate,
               nextAvailableEndDate: this.nextAvailableEndDate
             })
 
-            // ✅ Mostrar mensaje según cantidad de fechas sugeridas
-            const message = `No disponible. Dentro del rango seleccionado la próxima fecha disponible es del ${this.nextAvailableStartDate[0]} hasta el ${this.nextAvailableEndDate[0]}`
-              + (data[1]
-                ? ` y desde el ${this.nextAvailableStartDate[1]} hasta el ${this.nextAvailableEndDate[1]}`
-                : '')
+
+            let message = 'No disponible en las fechas seleccionadas.'
+            if (this.nextAvailableStartDate) {
+              message = `No disponible. La próxima fecha disponible es del ${this.nextAvailableStartDate[0]} hasta el ${this.nextAvailableEndDate[0]}`
+              if (this.nextAvailableStartDate[1]) {
+                message += ` y desde el ${this.nextAvailableStartDate[1]} hasta el ${this.nextAvailableEndDate[1]}`
+              }
+            }
 
             this.$emit('show-alert', 'error', message)
-            return
-          }else {
-            this.nextAvailableStartDate = []
-            this.nextAvailableEndDate = []
+
+          } else if (this.available) {
+            // SÍ disponible - mostrar éxito
             this.$emit('show-alert', 'success', 'Disponible')
+          } else {
+            // No hay datos disponibles
+            this.$emit('show-alert', 'error', 'No hay disponibilidad para este vehículo')
           }
         }
-
-
-        
-        
 
       } catch (err) {
         console.log('[DEBUG] checkAvailability error:', err)
         this.available = false
         this.$emit('show-alert', 'error', 'Error al verificar disponibilidad')
       }
-    },
+    }
+,
 
     async confirmReservation() {
       if (this.available !== true || this.nights <= 0) return

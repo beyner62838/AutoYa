@@ -15,6 +15,7 @@ public class CarDTO {
     private String model;
     private int year;
     private String color;
+    private String city;
     private VehicleCategory category;
     private VehicleStatus status;
     private FuelType fuelType;
