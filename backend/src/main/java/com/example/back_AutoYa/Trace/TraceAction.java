@@ -1,31 +1,21 @@
 package com.example.back_AutoYa.Trace;
 
 /**
- * Enum que define los tipos de acciones registradas en la trazabilidad.
- * Se usa en la entidad TraceLog para identificar el tipo de evento.
+ * Enumeración que define los tipos de acciones
+ * que se registran en la tabla de trazabilidad (trace_log).
  */
 public enum TraceAction {
-
-    // ==== RESERVAS ====
+    // --- Acciones de reservas ---
     RESERVATION_CREATED,
     RESERVATION_HELD,
     RESERVATION_CANCELLED,
 
-    // ==== PAGOS ====
+    // --- Acciones de pagos ---
     PAYMENT_INTENT_CREATED,
     PAYMENT_CAPTURED,
     PAYMENT_CONFIRMED,
-    PAYMENT_CREATED,
+    PAYMENT_FAILED,
 
-
-    // ==== AUTOS ====
-    CAR_CREATED,
-    CAR_UPDATED,
-    CAR_DELETED,
-
-    // ==== TRAZA DE PRUEBA ====
-    TRACE_TEST,
-
-    // ==== OTROS ====
+    // --- Acción genérica si no se reconoce ---
     UNKNOWN
 }

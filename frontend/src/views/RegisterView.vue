@@ -91,7 +91,20 @@ export default {
     }
   },
   methods: {
+    validarRegistro(){
+      const f=this.registerForm;
+      const name=/^[A-Za-zÁÉÍÓÚÑáéíóúñ ]+$/;
+      const phone=/^\d{10}$/;
+      const email=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      if(!name.test(f.firstname||'')) return this.$emit('show-alert','error','El nombre solo debe contener letras'),false;
+      if(!name.test(f.lastname||'')) return this.$emit('show-alert','error','El apellido solo debe contener letras'),false;
+      if(!phone.test(f.phone||'')) return this.$emit('show-alert','error','El teléfono debe tener 10 dígitos y solo datos numericos'),false;
+      if(!email.test(f.email||'')) return this.$emit('show-alert','error','Ingrese un correo válido'),false;
+      if(!f.password || f.password.length<6) return this.$emit('show-alert','error','La contraseña debe tener mínimo 6 caracteres'),false;
+      return true;
+    },
     async register() {
+      if(!this.validarRegistro()) return;
       this.loading = true
       try {
         await api.post('/auth/register', this.registerForm)

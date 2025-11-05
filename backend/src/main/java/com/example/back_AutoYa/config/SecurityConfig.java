@@ -80,14 +80,7 @@ public class SecurityConfig {
 
                         // ====== GET PÚBLICOS ======
                         .requestMatchers(HttpMethod.GET, both(
-                                "/api/cars",
-                                "/api/cars/",
-                                "/api/cars/cities",
-                                "/api/cars/filter",
-                                "/api/cars/available",
-                                "/api/cars/avalible",     // tu endpoint actual
-                                "/api/cars/*",
-                                "/api/cars/*/availability"
+                                "/api/trace/**"
                         )).permitAll()
 
                         // ====== EL RESTO PROTEGIDO ======
@@ -95,9 +88,8 @@ public class SecurityConfig {
                         .requestMatchers(both("/api/client/**")).hasRole("CLIENT")
                         // Cars: escritura/acciones requieren auth
                         .requestMatchers(both("/api/cars/**")).authenticated()
-                        .requestMatchers(both("/api/reservations/**")).hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers(both("/api/reservations/**")).authenticated()
                         .requestMatchers(both("/api/payments/**")).authenticated()
-                        .requestMatchers(both("/api/trace/**")).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

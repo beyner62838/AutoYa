@@ -1,8 +1,69 @@
 <template>
   <div class="cars-page">
-    <!-- Elimina la alerta local aquí -->
     <!-- Filtros -->
     <section class="card">
+      <div class="filters mt-2">
+        <button class="btn btn-secondary" type="button" @click="filtersOpen = !filtersOpen">Filtrar por</button>
+
+        <div v-if="filtersOpen" class="card mt-2">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="f-city">Ciudad</label>
+              <select id="f-city" v-model="filters.city">
+                <option value="">Todas</option>
+                <option v-for="c in cities" :key="c" :value="c">{{ c }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="f-brand">Marca</label>
+              <input id="f-brand" v-model.trim="filters.brand" placeholder="Ej: Toyota"/>
+            </div>
+
+            <div class="form-group">
+              <label for="f-model">Modelo</label>
+              <input id="f-model" v-model.trim="filters.model" placeholder="Ej: Corolla"/>
+            </div>
+
+            <div class="form-group">
+              <label for="f-category">Categoría</label>
+              <select id="f-category" v-model="filters.category">
+                <option value="">Todas</option>
+                <option value="SEDAN">Sedán</option>
+                <option value="SUV">SUV</option>
+                <option value="PICKUP">Camioneta</option>
+                <option value="COUPE">Coupé</option>
+                <option value="HATCHBACK">Hatchback</option>
+                <option value="VAN">Van</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="f-trans">Transmisión</label>
+              <select id="f-trans" v-model="filters.transmissionType">
+                <option value="">Todas</option>
+                <option value="MANUAL">Manual</option>
+                <option value="AUTOMATIC">Automática</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="f-color">Color</label>
+              <input id="f-color" v-model.trim="filters.color" placeholder="Ej: Rojo"/>
+            </div>
+          </div>
+
+          <!-- Botones de filtros -->
+          <div class="filter-actions mt-3">
+            <button class="btn btn-primary" type="button" @click="applyFilters" :disabled="loading">
+              <span v-if="!loading">Aplicar filtros</span>
+              <span v-else class="loader" aria-label="Cargando"></span>
+            </button>
+            <button class="btn btn-secondary" type="button" @click="clearFilters" :disabled="loading">Limpiar filtros</button>
+          </div>
+        </div>
+      </div>
+
       <div class="section-header">
         <h2 class="section-title">Buscar Autos Disponibles</h2>
 
@@ -19,12 +80,10 @@
           <button v-if="userInfo?.role === 'ADMIN'" class="btn btn-success" @click="showAdd = true" type="button">
             + Agregar auto
           </button>
-
-          <!-- ❌ ELIMINADO: El select que estaba aquí -->
         </div>
       </div>
 
-      <!-- 🔹 Reorganizado: Fechas + rango + ordenar -->
+      <!-- Fechas + rango + ordenar -->
       <div class="form-grid">
         <!-- Columna izquierda -->
         <div>
@@ -33,20 +92,31 @@
             <input id="from" type="date" v-model="searchDates.startDate" />
           </div>
 
-          <!-- 🎚️ Rango de precio -->
+          <!-- Rango de precio -->
           <div class="form-group price-range">
             <label>Rango de precio (USD/día)</label>
 
             <div class="range-track" :style="rangeTrackStyle" aria-hidden="true"></div>
 
             <div class="range-row">
-              <input type="range" :min="catalogMin" :max="catalogMax" step="1" v-model.number="sliderMin"
-                @input="onSlide('min')" />
-              <input type="range" :min="catalogMin" :max="catalogMax" step="1" v-model.number="sliderMax"
-                @input="onSlide('max')" />
+              <input
+                type="range"
+                :min="catalogMin"
+                :max="catalogMax"
+                step="1"
+                v-model.number="sliderMin"
+                @input="onSlide('min')"
+              />
+              <input
+                type="range"
+                :min="catalogMin"
+                :max="catalogMax"
+                step="1"
+                v-model.number="sliderMax"
+                @input="onSlide('max')"
+              />
             </div>
 
-            <!-- Inputs manuales -->
             <div class="range-badges">
               <input type="number" v-model.number="sliderMin" :min="catalogMin" :max="sliderMax" class="price-input" />
               <span class="spacer">–</span>
@@ -63,7 +133,6 @@
             <input id="to" type="date" v-model="searchDates.endDate" />
           </div>
 
-          <!-- 🔽 Ordenar por - AHORA DEBAJO DE FECHA FIN -->
           <div class="form-group">
             <label for="sort">Ordenar por</label>
             <select id="sort" v-model="sortOption">
@@ -76,7 +145,7 @@
       </div>
     </section>
 
-    <!-- Chips -->
+    <!-- Chip de orden -->
     <div v-if="sortOption !== 'none'" class="order-chip">
       <span>Orden actual: <strong>{{ sortLabel }}</strong></span>
       <button @click="clearSort" class="clear-btn" title="Quitar orden">✕</button>
@@ -94,16 +163,23 @@
     </div>
 
     <!-- Modales -->
-    <CarModal 
-      v-if="showCarModal" 
-      :car="selectedCar" 
-      :userInfo="userInfo" 
-      @close="closeModal" 
+    <CarModal
+      v-if="showCarModal"
+      :car="selectedCar"
+      :userInfo="userInfo"
+      @close="closeModal"
       @show-alert="(type, msg) => $emit('show-alert', type, msg)"
-      @reserved="onReserved" 
+      @reserved="onReserved"
     />
-    <AddCarModal v-if="showAdd" :userInfo="userInfo" :car="editCar" @close="() => { showAdd = false; editCar = null }"
-      @car-added="onCarAdded" @car-updated="onCarUpdated" @show-alert="showAlert" />
+    <AddCarModal
+      v-if="showAdd"
+      :userInfo="userInfo"
+      :car="editCar"
+      @close="() => { showAdd = false; editCar = null }"
+      @car-added="onCarAdded"
+      @car-updated="onCarUpdated"
+      @show-alert="showAlert"
+    />
   </div>
 </template>
 
@@ -118,6 +194,9 @@ export default {
   components: { CarCard, CarModal, AddCarModal },
   data() {
     return {
+      filtersOpen: false,
+      filters: { city: '', brand: '', model: '', category: '', transmissionType: '', color: '' },
+      cities: [],
       loading: false,
       cars: [],
       showCarModal: false,
@@ -131,15 +210,11 @@ export default {
       sliderMin: 0,
       sliderMax: 0,
       editCar: null,
-      alert: {
-        visible: false,
-        type: 'info', // 'success' | 'error' | 'info'
-        msg: '',
-        timeoutId: null
-      }
+      alert: { visible: false, type: 'info', msg: '', timeoutId: null }
     }
   },
   async mounted() {
+    await this.fetchCities()
     await this.getAllCars()
 
     const savedSort = localStorage.getItem('cars_sort_option')
@@ -159,7 +234,7 @@ export default {
       const res = await api.get('/auth/hello')
       this.userInfo = res.data
       if (this.userInfo?.id) localStorage.setItem('userId', this.userInfo.id)
-    } catch { }
+    } catch {}
   },
   computed: {
     catalogMin() {
@@ -188,7 +263,16 @@ export default {
         return p >= this.sliderMin && p <= this.sliderMax
       })
 
+      // Apply field filters
+      if (this.filters.city) list = list.filter(c => c.city && c.city.toLowerCase().includes(this.filters.city.toLowerCase()))
+      if (this.filters.brand) list = list.filter(c => c.brand && c.brand.toLowerCase().includes(this.filters.brand.toLowerCase()))
+      if (this.filters.model) list = list.filter(c => c.model && c.model.toLowerCase().includes(this.filters.model.toLowerCase()))
+      if (this.filters.category) list = list.filter(c => c.category && c.category.toLowerCase().includes(this.filters.category.toLowerCase()))
+      if (this.filters.transmissionType) list = list.filter(c => c.transmissionType && c.transmissionType.toLowerCase().includes(this.filters.transmissionType.toLowerCase()))
+      if (this.filters.color) list = list.filter(c => c.color && c.color.toLowerCase().includes(this.filters.color.toLowerCase()))
+
       if (this.sortOption === 'none') return list
+
       const dir = this.sortOption.endsWith('desc') ? -1 : 1
       return [...list].sort((a, b) => (priceOf(a) - priceOf(b)) * dir)
     },
@@ -201,12 +285,32 @@ export default {
     }
   },
   methods: {
+    async fetchCities() {
+      try {
+        const r = await api.get('/api/cars/cities')
+        this.cities = Array.isArray(r.data) ? r.data : []
+      } catch {
+        this.cities = []
+      }
+    },
+
+    async applyFilters() {
+      this.filtersOpen = false
+      // Local filter only
+    },
+
+    async clearFilters() {
+      this.filters = { city: '', brand: '', model: '', category: '', transmissionType: '', color: '' }
+      this.filtersOpen = false
+    },
+
     onSlide(which) {
       if (which === 'min' && this.sliderMin > this.sliderMax) this.sliderMin = this.sliderMax
       if (which === 'max' && this.sliderMax < this.sliderMin) this.sliderMax = this.sliderMin
       this.minPrice = this.sliderMin
       this.maxPrice = this.sliderMax
     },
+
     clearPriceRange() {
       this.sliderMin = this.catalogMin
       this.sliderMax = this.catalogMax
@@ -214,15 +318,17 @@ export default {
       this.maxPrice = this.sliderMax
       localStorage.removeItem('cars_min_price')
       localStorage.removeItem('cars_max_price')
-       this.clearSort()
+      this.clearSort()
       this.searchDates.startDate = ''
       this.searchDates.endDate = ''
       this.getAllCars()
     },
+
     clearSort() {
       this.sortOption = 'none'
       localStorage.removeItem('cars_sort_option')
     },
+
     async getAllCars() {
       this.loading = true
       try {
@@ -234,15 +340,14 @@ export default {
         this.loading = false
       }
     },
+
     async searchAvailableCars() {
       if (!this.searchDates.startDate || !this.searchDates.endDate)
         return this.$emit('show-alert', 'error', 'Por favor selecciona ambas fechas')
 
       this.loading = true
       try {
-        const res = await api.get('/api/cars/avalible', {
-          params: this.searchDates
-        })
+        const res = await api.get('/api/cars/avalible', { params: this.searchDates })
         this.cars = res.data
         this.$emit('show-alert', 'success', `Se encontraron ${this.cars.length} autos`)
       } catch {
@@ -251,8 +356,8 @@ export default {
         this.loading = false
       }
     },
+
     selectCar(car) {
-      // Si es ADMIN, abrir el modal de edición; si no, abrir el modal de detalles (reserva)
       if (this.userInfo?.role === 'ADMIN') {
         this.editCar = car
         this.showAdd = true
@@ -261,24 +366,25 @@ export default {
         this.showCarModal = true
       }
     },
+
     closeModal() {
       this.showCarModal = false
       this.selectedCar = null
     },
+
     onReserved() {
       this.closeModal()
       this.$router.push('/reservations')
     },
-    onCarAdded(car) {
-      this.cars.unshift(car)
+
+    onCarAdded() {
       this.getAllCars()
     },
-    // Manejar actualizaciones desde AddCarModal
-    async onCarUpdated(updated) {
-      // recargar lista para asegurar consistencia
+
+    async onCarUpdated() {
       await this.getAllCars()
     },
-    // Mostrar alerta local y autohide
+
     showAlert(type, msg) {
       this.$emit('show-alert', type, msg)
     },
@@ -289,15 +395,13 @@ export default {
         this.alert.timeoutId = null
       }
       this.alert.visible = false
-    },
+    }
   }
 }
 </script>
 
 <style scoped>
-.card {
-  overflow: visible !important;
-}
+.card { overflow: visible !important; }
 
 .section-header {
   display: flex;
@@ -307,249 +411,83 @@ export default {
   margin-bottom: 20px;
 }
 
-.section-title {
-  color: #fff;
-  font-size: 1.5rem;
-  margin: 0;
+.section-title { color: #fff; font-size: 1.5rem; margin: 0; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+/* Botonera de filtros */
+.filter-actions { display: flex; gap: 10px; }
+
+/* Slider doble */
+.price-range { position: relative; }
+.range-row { position: relative; height: 30px; margin-top: 6px; }
+.range-row input[type="range"]{
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; width: 100%;
+  background: none; -webkit-appearance: none; appearance: none; pointer-events: none;
 }
+.range-row input[type="range"]::-webkit-slider-thumb{ pointer-events: auto; }
+.range-row input[type="range"]::-moz-range-thumb{ pointer-events: auto; }
 
-.actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* ❌ ELIMINADOS: Los estilos de .actions select ya no son necesarios */
-
-/* 🎚️ Slider doble */
-.price-range {
-  position: relative;
-}
-
-.range-row {
-  position: relative;
-  height: 30px;
-  margin-top: 6px;
-}
-
-.range-row input[type="range"] {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  background: none;
-  -webkit-appearance: none;
-  appearance: none;
-  pointer-events: none;
-}
-
-.range-row input[type="range"]::-webkit-slider-thumb {
-  pointer-events: auto;
-}
-
-.range-row input[type="range"]::-moz-range-thumb {
-  pointer-events: auto;
-}
-
-.range-track {
-  height: 8px;
-  margin-top: 8px;
-  border-radius: 999px;
+.range-track{
+  height: 8px; margin-top: 8px; border-radius: 999px;
   background: linear-gradient(to right,
-      rgba(255, 255, 255, 0.25) 0 var(--a),
-      rgba(59, 130, 246, 0.85) var(--a) var(--b),
-      rgba(255, 255, 255, 0.25) var(--b) 100%);
+    rgba(255,255,255,.25) 0 var(--a),
+    rgba(59,130,246,.85) var(--a) var(--b),
+    rgba(255,255,255,.25) var(--b) 100%);
+}
+.range-row input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; border: 2px solid rgba(59,130,246,.9); margin-top: -5px; cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.25);
+}
+.range-row input[type="range"]::-moz-range-thumb{
+  width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid rgba(59,130,246,.9); cursor: pointer;
+}
+.range-badges{ display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.price-input{
+  background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25);
+  padding: 4px 10px; border-radius: 10px; font-size: .9rem; width: 80px;
+}
+.price-input:focus{ outline: none; border-color: #4ba3ff; background: rgba(255,255,255,.2); }
+.range-badges .spacer{ color: #9fb6ff; }
+.clear-btn.small{
+  font-size: .85rem; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.12); color: #fff; cursor: pointer; transition: .2s;
+}
+.clear-btn.small:hover{ background: rgba(255,255,255,.2); }
+
+/* Grid de 2 columnas */
+.form-grid{
+  display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 20px; margin-top: 20px;
 }
 
-.range-row input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid rgba(59, 130, 246, 0.9);
-  margin-top: -5px;
-  cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+.form-group{ margin-bottom: 16px; }
+label{ display: block; color: #fff; font-size: .9rem; margin-bottom: 8px; font-weight: 500; }
+
+input[type="date"], select, input[type='text']{
+  background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25);
+  border-radius: 10px; padding: 10px 12px; font-size: .9rem; width: 100%; cursor: pointer; transition: .3s;
 }
-
-.range-row input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid rgba(59, 130, 246, 0.9);
-  cursor: pointer;
+input[type="date"]:hover, #sort:hover{
+  background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.35);
 }
-
-.range-badges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+input[type="date"]:focus, #sort:focus{
+  outline: none; border-color: #4ba3ff; background: rgba(255,255,255,.15);
 }
+#sort option{ background: #1e293b; color: #fff; }
 
-.price-input {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  width: 80px;
+/* Orden chip */
+.order-chip{
+  display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.12);
+  color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 8px 14px; margin: 16px 0;
+  width: fit-content; box-shadow: 0 2px 4px rgba(0,0,0,.3);
 }
-
-.price-input:focus {
-  outline: none;
-  border-color: #4ba3ff;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.range-badges .spacer {
-  color: #9fb6ff;
-}
-
-.clear-btn.small {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.clear-btn.small:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* 📦 Grid de 2 columnas */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-/* ✅ Separación entre campos del formulario */
-.form-group {
-  margin-bottom: 16px;
-}
-
-/* Labels */
-label {
-  display: block;
-  color: #fff;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-/* Inputs de fecha */
-input[type="date"] {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  width: 100%;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-input[type="date"]:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-input[type="date"]:focus {
-  outline: none;
-  border-color: #4ba3ff;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* ✅ Select de ordenar - NUEVO ESTILO */
-#sort {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  width: 100%;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-#sort:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-#sort:focus {
-  outline: none;
-  border-color: #4ba3ff;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-#sort option {
-  background: #1e293b;
-  color: #fff;
-}
-
-/* 🔹 Chip de orden actual */
-.order-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 8px 14px;
-  margin: 16px 0;
-  width: fit-content;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.order-chip strong {
-  color: #4ba3ff;
-}
-
-.clear-btn {
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 18px;
-  cursor: pointer;
-  transition: 0.2s;
-  padding: 0;
-  margin: 0;
-  line-height: 1;
-}
-
-.clear-btn:hover {
-  color: #fff;
-  transform: scale(1.15);
-}
-
-/* Estilos de la alerta (encajar con paleta: azules y fondo oscuro) */
-
+.order-chip strong{ color: #4ba3ff; }
+.clear-btn{ background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; transition: .2s; padding: 0; margin: 0; line-height: 1; }
+.clear-btn:hover{ color: #fff; transform: scale(1.15); }
 
 @media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .form-grid{ grid-template-columns: 1fr; }
+  .section-header{ flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 </style>

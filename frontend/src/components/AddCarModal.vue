@@ -32,6 +32,11 @@
             </div>
 
             <div class="form-group">
+              <label for="city">Ciudad</label>
+              <input id="city" type="text" v-model.trim="newCar.city" required placeholder="Ej: Neiva" />
+            </div>
+
+            <div class="form-group">
               <label for="category">Categoría</label>
               <select id="category" v-model="newCar.category" required>
                 <option value="SEDAN">Sedán</option>
@@ -156,6 +161,7 @@ export default {
         fuelType: 'GASOLINE',
         transmissionType: 'MANUAL',
         pricePerDay: 50,
+        city: '',
         licensePlate: ''
       },
       photos: [] // [{ file, preview, cover:false }]
@@ -241,6 +247,10 @@ export default {
 
     /* ======== Crear o Actualizar auto ======== */
     async addCar() {
+      const plateOk = /^[A-Z]{3}\d{3}$/.test((this.newCar.licensePlate || '').toUpperCase());
+      const onlyLetters = /^[A-Za-zÁÉÍÓÚÑáéíóúñ ]+$/;
+      if (!onlyLetters.test(this.newCar.city || '')) return this.$emit('show-alert', 'error', 'La ciudad solo debe contener letras');
+      if (!plateOk) return this.$emit('show-alert', 'error', 'La placa debe tener formato AAA111');
       if (!this.newCar.brand || !this.newCar.model || !this.newCar.licensePlate)
         return this.$emit('show-alert', 'error', 'Completa los campos obligatorios')
 
@@ -318,6 +328,7 @@ export default {
         fuelType: 'GASOLINE',
         transmissionType: 'MANUAL',
         pricePerDay: 50,
+        city: '',
         licensePlate: ''
       }
     }
