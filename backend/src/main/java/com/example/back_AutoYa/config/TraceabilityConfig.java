@@ -9,23 +9,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TraceabilityConfig {
 
-    @Bean
+
     public FilterRegistrationBean<BookingPaymentTraceFilter> bookingPaymentTraceFilter(TraceLogService traceLogService) {
         FilterRegistrationBean<BookingPaymentTraceFilter> registrationBean = new FilterRegistrationBean<>();
 
+        // ✅ Usa la variable (minúscula), no la clase
         registrationBean.setFilter(new BookingPaymentTraceFilter(traceLogService));
 
-        // 👇 Importante: intercepta las rutas con y sin context-path
         registrationBean.addUrlPatterns(
-                "/api/reservations/*",
-                "/api/payment/*",
-                "/api/cars/*",
-                "/autoya/api/reservations/*",
-                "/autoya/api/payment/*",
-                "/autoya/api/cars/*"
+                "/api/reservations/**",
+                "/api/payment/**"
         );
 
-        registrationBean.setOrder(1);
+        registrationBean.setOrder(10000);
         return registrationBean;
     }
 }

@@ -1,13 +1,12 @@
 <template>
   <div class="card-car" role="button" tabindex="0" @click="$emit('select', car)" @keyup.enter="$emit('select', car)"
     :aria-label="`Ver detalles de ${car.brand} ${car.model}`">
+    <!-- Badge de ciudad (solo visible en hover del card) -->
+    <div class="city-badge">{{ car.city }}</div>
+
     <!-- Imagen del auto -->
     <div class="media">
-      <!-- Mostrar GIF si está cargando -->
-      <img v-if="loading" src="../assets/loading.gif" alt="Cargando..." class="media-img loading-gif" />
-
-      <!-- Mostrar imagen del auto si ya cargó -->
-      <img v-else :src="photoUrl || placeholder" alt="Imagen del vehículo" class="media-img" loading="lazy" />
+      <img :src="photoUrl || placeholder" alt="Imagen del vehículo" class="media-img" loading="lazy" />
     </div>
 
     <!-- Cuerpo -->
@@ -45,17 +44,19 @@ export default {
   },
   data() {
     return {
-      placeholder: '', // ya no lo usas como loading
+      placeholder: 'https://via.placeholder.com/640x360?text=Auto',
       photos: [],
       loading: false
     }
   },
   computed: {
     photoUrl() {
+      // Devuelve la primera foto si existe
       return this.photos.length > 0 ? this.photos[0].url || this.photos[0] : null
     }
   },
   async mounted() {
+    // Carga la foto de portada del auto
     await this.getCarPhotoCover(this.car.id)
   },
   methods: {
@@ -67,14 +68,11 @@ export default {
       }
     },
     async getCarPhotoCover(carId) {
-      this.loading = true
       try {
         const res = await api.get(`/api/cars/${carId}/photos`)
         this.photos = res.data || []
       } catch {
         console.warn('Error al cargar fotos del auto', carId)
-      } finally {
-        this.loading = false
       }
     }
   }
@@ -83,6 +81,8 @@ export default {
 
 <style scoped>
 .card-car {
+  position: relative;
+  /* 🔹 Para posicionar el badge dentro del card */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -96,15 +96,32 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+/* 🔹 Badge de ciudad: oculto por defecto, aparece en hover del card */
+.city-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, .6);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: .8rem;
+  opacity: 0;
+  /* oculto */
+  transition: opacity .2s ease-in-out;
+  pointer-events: none;
+  /* evita capturar clics */
+}
+
+.card-car:hover .city-badge {
+  opacity: 1;
+  /* visible solo en hover */
+}
+
 .media-img {
   width: 100%;
   height: 180px;
   object-fit: cover;
-}
-
-.loading-gif {
-  object-fit: contain;
-  background: rgba(0, 0, 0, 0.3);
 }
 
 .body {

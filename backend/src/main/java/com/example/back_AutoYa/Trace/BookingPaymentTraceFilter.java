@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
@@ -21,10 +23,11 @@ import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * 🔍 Filtro de trazabilidad (trace_log)
- * Intercepta reservas, pagos y autos. Guarda trazas del request en la BD.
- */
+// Importa correctamente tu enum
+// import com.example.back_AutoYa.Entities.TraceAction;
+
+@Component // Importante para ser detectado por Spring
+@Order(20) // se ejecuta después de los filtros de autenticación o seguridad
 public class BookingPaymentTraceFilter extends OncePerRequestFilter {
 
     private final TraceLogService traceLogService;
@@ -36,107 +39,96 @@ public class BookingPaymentTraceFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
+        String path = request.getRequestURI().toLowerCase();
         String method = request.getMethod();
-        boolean isNotFiltered =!(path.startsWith("/autoya/api/reservations")
-                || path.startsWith("/autoya/api/payment")
-                || path.startsWith("/autoya/api/cars"));
-
-        return isNotFiltered || method.equalsIgnoreCase("GET");
+        // filtra solo rutas relacionadas con reservas o pagos
+        return !(path.startsWith("/autoya/api/reservations") || path.startsWith("/autoya/api/payment")) && !(method.equals("GET"));
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
-
-        String contentType = Optional.ofNullable(request.getContentType()).orElse("");
-        boolean isMultipart = contentType.contains("multipart/form-data");
+                                    FilterChain chain)
+            throws ServletException, IOException {
 
         long start = System.currentTimeMillis();
-
-        // ✅ Solo envolver si no es multipart
-        RequestBodyCachingWrapper wrappedRequest  = !isMultipart ? new RequestBodyCachingWrapper(request) : null;
+        RequestBodyCachingWrapper wrappedRequest = new RequestBodyCachingWrapper(request);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
-        chain.doFilter(wrappedRequest != null ? wrappedRequest : request, wrappedResponse);
+        try {
+            chain.doFilter(wrappedRequest, wrappedResponse);
+        } finally {
+            long duration = System.currentTimeMillis() - start;
 
-        long duration = System.currentTimeMillis() - start;
+            TraceLog log = new TraceLog();
+            log.setTimeUtc(OffsetDateTime.now(ZoneOffset.UTC));
+            log.setHttpMethod(request.getMethod());
+            log.setPath(request.getRequestURI());
+            log.setHttpStatus(wrappedResponse.getStatus());
+            log.setDurationMs(duration);
+            log.setClientIp(request.getRemoteAddr());
+            log.setUserAgent(Optional.ofNullable(request.getHeader("User-Agent")).orElse(""));
+            log.setUsername(Optional.ofNullable(request.getUserPrincipal())
+                    .map(p -> p.getName())
+                    .orElse("anonymous"));
 
-        TraceLog log = new TraceLog();
-        log.setTimeUtc(OffsetDateTime.now(ZoneOffset.UTC));
-        log.setHttpMethod(request.getMethod());
-        log.setPath(request.getRequestURI());
-        log.setHttpStatus(response.getStatus());
-        log.setDurationMs(duration);
-        log.setClientIp(request.getRemoteAddr());
-        log.setUserAgent(Optional.ofNullable(request.getHeader("User-Agent")).orElse(""));
-        log.setUsername(Optional.ofNullable(request.getUserPrincipal())
-                .map(p -> p.getName())
-                .orElse("anonymous"));
 
-        // ✅ Capturar body o query según tipo de contenido
-        if (wrappedRequest != null) {
 
-            byte[] body = wrappedRequest.getCached();
 
-            if (body.length > 0) {
+            byte[] RequestBody = wrappedRequest.getCached();
+            if (RequestBody != null && RequestBody.length > 0 &&
+                    request.getContentType() != null &&
+                    request.getContentType().toLowerCase().contains("application/json")) {
+
                 try {
-                    JsonNode wrappedRoot = mapper.readTree(body);
-                    JsonNode rootResponse = mapper.readTree(wrappedResponse.getContentAsByteArray());
-                    String reservationParam = wrappedRequest.getParameter("reservationId");
+                    JsonNode requestRoot = mapper.readTree(RequestBody);
+                    JsonNode responseRoot = mapper.readTree(wrappedResponse.getContentAsByteArray());
+                    String reservationParam = request.getParameter("reservationId");
                     if (reservationParam != null && !reservationParam.isEmpty()) {
                         log.setReservationId(reservationParam);
                     }else {
-                        if (rootResponse.has("id")) log.setReservationId(rootResponse.get("id").asText());
+                        if (mapper.readTree(wrappedResponse.getContentAsByteArray()).has("id")) log.setReservationId(responseRoot.get("id").asText());
                     }
-                    if (wrappedRoot.has("paymentId")) log.setPaymentId(wrappedRoot.get("paymentId").asText());
-                    if (wrappedRoot.has("amount")) log.setAmount(wrappedRoot.get("amount").asText());
-                    if (wrappedRoot.has("status")) log.setPaymentStatus(wrappedRoot.get("status").asText());
+                    if (requestRoot.has("paymentId")) log.setPaymentId(requestRoot.get("paymentId").asText());
+                    if (requestRoot.has("amount")) log.setAmount(requestRoot.get("amount").asText());
+                    if (requestRoot.has("status")) log.setPaymentStatus(requestRoot.get("status").asText());
 
-                    String preview = new String(body, 0, Math.min(body.length, 2048), StandardCharsets.UTF_8);
+                    String preview = new String(RequestBody, 0, Math.min(RequestBody.length, 2048), StandardCharsets.UTF_8);
                     log.setPayloadPreview(preview);
-                    log.setPayloadHash(sha256Hex(body));
+                    log.setPayloadHash(sha256Hex(RequestBody));
+
                 } catch (Exception e) {
-                    log.setPayloadPreview(new String(body, StandardCharsets.UTF_8));
-                    log.setPayloadHash(sha256Hex(body));
+                    log.setPayloadPreview("Error parsing JSON RequestBody: " + e.getMessage());
                 }
-            } else if (request.getQueryString() != null) {
-                log.setPayloadPreview(request.getQueryString());
             }
-        } else if (isMultipart) {
-            log.setPayloadPreview("[multipart/form-data]");
-        }
 
-        // ✅ Detectar acción
-        String uri = request.getRequestURI().toLowerCase();
-        if (uri.contains("/cancel")) log.setAction(TraceAction.RESERVATION_CANCELLED);
-        else if (uri.contains("/hold")) log.setAction(TraceAction.RESERVATION_HELD);
-        else if (uri.contains("/intent")) log.setAction(TraceAction.PAYMENT_INTENT_CREATED);
-        else if (uri.contains("/capture")) log.setAction(TraceAction.PAYMENT_CAPTURED);
-        else if (uri.contains("/confirm")) log.setAction(TraceAction.PAYMENT_CONFIRMED);
-        else if (uri.contains("/payment")) log.setAction(TraceAction.PAYMENT_CREATED);
-        else if (uri.contains("/cars")) log.setAction(TraceAction.CAR_CREATED);
-        else log.setAction(TraceAction.RESERVATION_CREATED);
+            String uri = request.getRequestURI().toLowerCase();
+            String method = request.getMethod();
+            System.out.println("[TRACE FILTER:] "+ uri);
+            if (uri.contains("/reservations/cancel") || method.equals("DELETE"))
+                log.setAction(TraceAction.RESERVATION_CANCELLED);
+            else if (uri.contains("/reservations") && method.equals("POST"))
+                log.setAction(TraceAction.RESERVATION_CREATED);
+            else if (uri.contains("/payment/intent"))
+                log.setAction(TraceAction.PAYMENT_INTENT_CREATED);
+            else if (uri.contains("/payment/capture"))
+                log.setAction(TraceAction.PAYMENT_CAPTURED);
+            else if (uri.contains("/payment/confirm"))
+                log.setAction(TraceAction.PAYMENT_CONFIRMED);
+            else if (uri.contains("/payment") && "failed".equalsIgnoreCase(log.getPaymentStatus()))
+                log.setAction(TraceAction.PAYMENT_FAILED);
+            else
+                log.setAction(TraceAction.UNKNOWN);
 
-        // ✅ Guardado seguro: dentro o fuera de transacción
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            // 🔸 Esperar al commit del negocio (si existe)
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    new Thread(() -> {
-                        traceLogService.save(log);
-                        System.out.println("✅ TRACE GUARDADO POST-COMMIT: " + log.getAction() + " | " + log.getUsername());
-                    }).start();
-                }
-            });
-        } else {
-            // 🔸 Sin transacción activa → guardar inmediatamente y de forma asíncrona
-            new Thread(() -> {
+            try {
                 traceLogService.save(log);
-                System.out.println("✅ TRACE ASÍNCRONO GUARDADO: " + log.getAction() + " | " + log.getUsername());
-            }).start();
+
+            } catch (Exception e) {
+                // Loggea el error, pero no interrumpas la cadena
+                e.printStackTrace();
+            }finally {
+                wrappedResponse.copyBodyToResponse();
+            }
         }
     }
 
