@@ -25,7 +25,18 @@ pipeline {
     stage('Build images') {
       steps {
         sh """
+          echo "🚧 Construyendo imágenes Docker..."
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} build --pull --parallel
+        """
+      }
+    }
+
+    stage('Clean existing containers') {
+      steps {
+        sh """
+          echo "🧹 Deteniendo y eliminando contenedores previos si existen..."
+          docker stop redis minio || true
+          docker rm redis minio || true
         """
       }
     }
@@ -33,6 +44,7 @@ pipeline {
     stage('Deploy') {
       steps {
         sh """
+          echo "🚀 Desplegando servicios..."
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} down -v || true
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --build
         """
