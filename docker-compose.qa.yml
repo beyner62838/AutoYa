@@ -1,11 +1,12 @@
-version: "3.8"
-
 services:
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: autoya-backend:qa
     container_name: autoya-backend-qa
     ports:
-      - "8080:8080"
+      - "11080:8080"
     env_file:
       - .env.qa
     depends_on:
@@ -14,10 +15,13 @@ services:
       - minio
 
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     image: autoya-frontend:qa
     container_name: autoya-frontend-qa
     ports:
-      - "5173:5173"
+      - "11081:80"
     env_file:
       - .env.qa
     depends_on:
@@ -27,11 +31,11 @@ services:
     image: postgres:15
     container_name: postgres-qa
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: autoya_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432" # cambia si choca con dev
+      - "11543:5432"
     volumes:
       - postgres_data_qa:/var/lib/postgresql/data
 
@@ -39,7 +43,7 @@ services:
     image: redis:7
     container_name: redis-qa
     ports:
-      - "6380:6379"
+      - "11679:6379"
     volumes:
       - redis_data_qa:/data
 
@@ -48,13 +52,29 @@ services:
     container_name: minio-qa
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
-      - "9002:9000"
-      - "9003:9001"
+      - "11090:9000"
+      - "11091:9001"
     volumes:
       - minio_data_qa:/data
+
+  # 👇 Servicio auxiliar para crear bucket y hacerlo público automáticamente
+  minio-setup:
+    image: quay.io/minio/mc:latest
+    container_name: minio-setup-qa
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo '🕓 Esperando inicio de MinIO...' &&
+      sleep 8 &&
+      mc alias set myminio ${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb -p myminio/autoya-${BRANCH} || true &&
+      mc anonymous set download myminio/autoya-${BRANCH} &&
+      echo '✅ Bucket autoya-${BRANCH} público y listo.'
+      "
 
 volumes:
   postgres_data_qa:

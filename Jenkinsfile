@@ -7,16 +7,15 @@ pipeline {
   }
 
   environment {
-    // Se detecta automáticamente la rama desde el contexto del Multibranch Pipeline
-    COMPOSE_FILE = 'docker-compose.dev.yml'
-    ENV_FILE = '.env.dev'
+    // Archivos específicos del entorno QA
+    COMPOSE_FILE = 'docker-compose.qa.yml'
+    ENV_FILE = '.env.qa'
   }
 
   stages {
     stage('Checkout') {
       steps {
-        // Jenkins Multibranch ya hace el checkout automáticamente,
-        // pero esto garantiza que tengamos la última versión
+        // Garantiza que Jenkins tenga el código más reciente
         checkout scm
         echo "🌀 Branch actual: ${env.BRANCH_NAME}"
       }
@@ -25,7 +24,7 @@ pipeline {
     stage('Build images') {
       steps {
         sh """
-          echo "🚧 Construyendo imágenes Docker..."
+          echo "🚧 Construyendo imágenes Docker para QA..."
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} build --pull --parallel
         """
       }
@@ -44,7 +43,7 @@ pipeline {
     stage('Deploy') {
       steps {
         sh """
-          echo "🚀 Desplegando servicios..."
+          echo "🚀 Desplegando entorno QA..."
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} down -v || true
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --build
         """
@@ -54,10 +53,10 @@ pipeline {
 
   post {
     success {
-      echo "✅ Deploy successful on branch: ${env.BRANCH_NAME}"
+      echo "✅ Deploy QA exitoso en la rama: ${env.BRANCH_NAME}"
     }
     failure {
-      echo "❌ Deploy failed on branch: ${env.BRANCH_NAME}"
+      echo "❌ Deploy QA falló en la rama: ${env.BRANCH_NAME}"
     }
   }
 }
