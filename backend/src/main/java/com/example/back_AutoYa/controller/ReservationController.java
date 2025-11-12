@@ -1,7 +1,5 @@
 package com.example.back_AutoYa.controller;
 
-import com.example.back_AutoYa.Entities.Car;
-import com.example.back_AutoYa.Entities.Reservation;
 import com.example.back_AutoYa.dto.BlockDateDTO;
 import com.example.back_AutoYa.dto.ReservationDTO;
 import com.example.back_AutoYa.service.ReservationService;
@@ -25,12 +23,16 @@ public class ReservationController {
         return reservationService.getAllReservations();
     }
 
+    @GetMapping("/{userId}")
+    public List<ReservationDTO> getAllReservationsById(@PathVariable Long userId) {
+        return reservationService.getAllReservationsById(userId);
+    }
+
     @PostMapping("/block-date")
     public ReservationDTO blockDateAndSetPrice(@RequestBody BlockDateDTO dto) {
         return reservationService.blockDateAndSetPrice(dto);
     }
 
-    @PostMapping
     @PostMapping()
     public ReservationDTO createReservation(
             @RequestParam Long clientId,
@@ -46,4 +48,9 @@ public class ReservationController {
         return reservationService.selectAndHoldReservation(carId, clientId);
     }
 
+    @PutMapping("/cancel")
+    public String cancelReservation(
+            @RequestParam Long reservationId) {
+        return reservationService.cancelReservation(reservationId);
+    }
 }

@@ -57,4 +57,21 @@ public class CarController {
     public void deleteCar(@PathVariable Long id) {
         carService.deleteCar(id);
     }
+
+    @GetMapping("/cities")
+    public java.util.List<String> getCities() {
+        return carService.getCities();
+    }
+
+    @GetMapping("/filter")
+    public java.util.List<com.example.back_AutoYa.dto.CarDTO> filter(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) com.example.back_AutoYa.Entities.Enums.VehicleCategory category,
+            @RequestParam(required = false) com.example.back_AutoYa.Entities.Enums.TransmissionType transmissionType,
+            @RequestParam(required = false) String color
+    ) {
+        return carService.filter(city, brand, model, category, transmissionType, color);
+    }
 }

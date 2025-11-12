@@ -7,10 +7,20 @@
         @logout="logout"
         @navigate="navigate"
       />
-      <div v-if="alert.show" :class="['alert', `alert-${alert.type}`]">
-        {{ alert.message }}
+      <!-- ALERTA GLOBAL -->
+      <div v-if="alert.show" :class="['site-alert', alert.type]" role="alert" aria-live="assertive">
+        <div class="site-alert-inner">
+          <div class="site-alert-icon" aria-hidden="true">
+            <span v-if="alert.type === 'success'">✓</span>
+            <span v-else-if="alert.type === 'error'">⚠</span>
+            <span v-else>ℹ</span>
+          </div>
+          <div class="site-alert-text">
+            <div class="site-alert-msg" v-html="alert.message"></div>
+          </div>
+          <button class="site-alert-close" @click="alert.show = false" aria-label="Cerrar alerta">✕</button>
+        </div>
       </div>
-
       <router-view @show-alert="showAlert" @auth-changed="onAuthChanged" />
     </div>
   </div>
@@ -27,7 +37,7 @@ export default {
     return {
       isAuthenticated: !!localStorage.getItem('token'),
       userInfo: null,
-      alert: { show: false, type: '', message: '' }
+      alert: { show: false, type: '', message: '', timeoutId: null }
     }
   },
   mounted() {
@@ -54,9 +64,13 @@ export default {
     navigate(route) {
       this.$router.push(route)
     },
-    showAlert(type, message) {
-      this.alert = { show: true, type, message }
-      setTimeout(() => { this.alert.show = false }, 5000)
+    showAlert(type, message, ms = 4500) {
+      if (this.alert.timeoutId) {
+        clearTimeout(this.alert.timeoutId)
+        this.alert.timeoutId = null
+      }
+      this.alert = { ...this.alert, show: true, type, message }
+      this.alert.timeoutId = setTimeout(() => { this.alert.show = false }, ms)
     },
     onAuthChanged(payload) {
       this.isAuthenticated = payload.isAuthenticated
