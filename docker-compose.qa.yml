@@ -1,31 +1,29 @@
-version: "3.8"
-
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: autoya-backend:ci
+    image: autoya-backend:qa
     container_name: autoya-backend-qa
     ports:
       - "11080:8080"
     env_file:
       - .env.qa
     depends_on:
-      - postgres-qa
-      - redis-qa
-      - minio-qa
+      - postgres
+      - redis
+      - minio
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: autoya-frontend:ci
+    image: autoya-frontend:qa
     container_name: autoya-frontend-qa
     ports:
       - "11081:80"
     env_file:
-      - .env.dev
+      - .env.qa
     depends_on:
       - backend
 
@@ -39,7 +37,7 @@ services:
     ports:
       - "11543:5432"
     volumes:
-      - postgres_data-qa:/var/lib/postgresql/data
+      - postgres_data_qa:/var/lib/postgresql/data
 
   redis:
     image: redis:7
@@ -47,7 +45,7 @@ services:
     ports:
       - "11679:6379"
     volumes:
-      - redis_data-qa:/data
+      - redis_data_qa:/data
 
   minio:
     image: quay.io/minio/minio:latest
@@ -60,23 +58,25 @@ services:
       - "11090:9000"
       - "11091:9001"
     volumes:
-      - minio_data:/data
+      - minio_data_qa:/data
 
-  # 👇 Servicio para configurar política pública automáticamente
-  minio-setup-qa:
+  # 👇 Servicio auxiliar para crear bucket y hacerlo público automáticamente
+  minio-setup:
     image: quay.io/minio/mc:latest
+    container_name: minio-setup-qa
     depends_on:
-      - minio-qa
+      - minio
     entrypoint: >
       /bin/sh -c "
-      sleep 5 &&
+      echo '🕓 Esperando inicio de MinIO...' &&
+      sleep 8 &&
       mc alias set myminio ${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
       mc mb -p myminio/autoya-${BRANCH} || true &&
       mc anonymous set download myminio/autoya-${BRANCH} &&
-      echo '✅ Bucket autoya-dev público listo.'
+      echo '✅ Bucket autoya-${BRANCH} público y listo.'
       "
 
 volumes:
-  postgres_data-qa:
-  redis_data-qa:
-  minio_data-qa:
+  postgres_data_qa:
+  redis_data_qa:
+  minio_data_qa:
