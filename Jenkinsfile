@@ -13,11 +13,21 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
       steps {
-        // Garantiza que Jenkins tenga el código más reciente
         checkout scm
         echo "🌀 Branch actual: ${env.BRANCH_NAME}"
+      }
+    }
+
+    stage('Load ENV Variables') {
+      steps {
+        sh """
+          echo "📥 Exportando variables desde ${ENV_FILE}..."
+          export \$(grep -v '^#' ${ENV_FILE} | xargs)
+          echo "🔧 Variables cargadas correctamente."
+        """
       }
     }
 
@@ -30,12 +40,11 @@ pipeline {
       }
     }
 
-    stage('Clean existing containers') {
+    stage('Clean previous environment') {
       steps {
         sh """
-          echo "🧹 Deteniendo y eliminando contenedores previos si existen..."
-          docker stop redis minio || true
-          docker rm redis minio || true
+          echo "🧹 Eliminando entorno QA previo..."
+          docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} down -v --remove-orphans || true
         """
       }
     }
@@ -44,7 +53,6 @@ pipeline {
       steps {
         sh """
           echo "🚀 Desplegando entorno QA..."
-          docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} down -v || true
           docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --build
         """
       }
