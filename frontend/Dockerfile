@@ -1,7 +1,7 @@
 FROM node:18 AS build
 WORKDIR /app
 
-ARG VITE_API_URL=http://backend:8080
+ARG VITE_API_URL=http://localhost:10080
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY package*.json ./
