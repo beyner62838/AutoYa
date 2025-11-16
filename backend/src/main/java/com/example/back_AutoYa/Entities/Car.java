@@ -43,6 +43,9 @@ public class Car {
     @Column(nullable = false)
     private VehicleCategory category;
 
+    @Column(name = "city", nullable = false)
+    private String city;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleStatus status;

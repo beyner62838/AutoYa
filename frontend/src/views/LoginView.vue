@@ -1,50 +1,115 @@
 <template>
-  <div v-if="!isAuthenticated" class="card">
-    <h2 style="margin-bottom:30px">Iniciar Sesión</h2>
-    <form @submit.prevent="login">
-      <div class="form-group"><label>Email</label><input type="email" v-model="loginForm.email" required /></div>
-      <div class="form-group"><label>Contraseña</label><input type="password" v-model="loginForm.password" required /></div>
-      <button class="btn btn-primary" type="submit" :disabled="loading">
-        <span v-if="loading" class="loading"></span>
-        <span v-else>Iniciar Sesión</span>
-      </button>
-    </form>
-  </div>
-  <div v-else class="card">
-    <h2>Ya estás autenticado</h2>
-    <button class="btn btn-primary" @click="$router.push('/cars')">Ir a Autos</button>
+  <div class="page-bg login-bg">
+    <!-- Toast de bienvenida -->
+    <transition name="fade">
+      <div v-if="showWelcome" class="welcome-toast" role="alert">
+        <div class="toast-row">
+          <span class="toast-icon">🚗</span>
+          <div class="toast-text">
+            <strong>Bienvenido de nuevo</strong>
+            <small>Alquila, reserva y arranca.</small>
+          </div>
+          <button class="toast-close" @click="closeWelcome" aria-label="Cerrar aviso">×</button>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Card principal -->
+    <div class="login-card card" role="dialog" aria-labelledby="login-title">
+      <!-- LADO IZQUIERDO -->
+      <div class="left">
+        <div class="brand-row">
+          <span class="brand-icon">🚗</span>
+          <h1 class="brand-name" id="login-title">AutoYa</h1>
+        </div>
+
+        <p class="tagline">Tu viaje empieza aquí.</p>
+
+        <div class="social under-brand">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <!-- FORMULARIO -->
+      <form class="form" @submit.prevent="handleLogin" :class="{ 'loading': isLoading }">
+        <h2 class="form-title">Iniciar Sesión</h2>
+
+        <input v-model="email" type="email" placeholder="Correo electrónico" required autocomplete="email" />
+        <input v-model="password" type="password" placeholder="Contraseña" required autocomplete="current-password" />
+
+        <button type="submit" :disabled="isLoading" class="btn btn-primary">
+          <span v-if="!isLoading">Entrar</span>
+          <span v-else class="loader"></span>
+        </button>
+
+        <a class="forgot" href="#">¿Olvidaste tu contraseña?</a>
+
+        <p v-if="error" class="error">{{ error }}</p>
+        <p class="terms">Al iniciar sesión aceptas nuestros <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Términos</a>
+          y <a
+            href="https://loremipsum-org.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc">Privacidad</a>.
+        </p>
+      </form>
+    </div>
   </div>
 </template>
 
 <script>
 import api from '../services/api'
+import '../assets/styles.css'
+
 export default {
   name: 'LoginView',
   data() {
     return {
-      loginForm: { email: '', password: '' },
-      loading: false,
-      isAuthenticated: !!localStorage.getItem('token')
+      email: '',
+      password: '',
+      isLoading: false,
+      error: '',
+      showWelcome: true
+    }
+  },
+  mounted() {
+    if (sessionStorage.getItem('autoya_welcome_dismissed') === '1') {
+      this.showWelcome = false
     }
   },
   methods: {
-    async login() {
-      this.loading = true
+    closeWelcome() {
+      this.showWelcome = false
+      sessionStorage.setItem('autoya_welcome_dismissed', '1')
+    },
+    async handleLogin() {
+      this.isLoading = true
+      this.error = ''
       try {
-        const resp = await api.post('/auth/login', this.loginForm)
-        const token = resp.data.token
+        const { data } = await api.post('/auth/login', { email: this.email, password: this.password })
+        const token = data.token
+        const userId = data.userId
         localStorage.setItem('token', token)
-        this.$emit('auth-changed', { isAuthenticated: true })
-        // fetch user info and navigate
-        const userResp = await api.get('/auth/hello')
+        localStorage.setItem('userId', userId)
+
+        const userResp = await api.get('/auth/hello', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
         this.$emit('auth-changed', { isAuthenticated: true, userInfo: userResp.data })
-        this.$router.push('/cars')
         this.$emit('show-alert', 'success', 'Inicio de sesión exitoso')
-      } catch (err) {
+        await this.sleep(700)
+        this.$router.push('/cars')
+      } catch (e) {
+        this.error = 'Credenciales incorrectas. Intenta de nuevo.'
         this.$emit('show-alert', 'error', 'Error al iniciar sesión')
       } finally {
-        this.loading = false
+        this.isLoading = false
       }
+    },
+
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     }
   }
 }

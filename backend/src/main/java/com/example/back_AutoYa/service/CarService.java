@@ -38,14 +38,14 @@ public class CarService {
                 .map(res -> res.getCar().getId())
                 .collect(Collectors.toSet());
 
-
-
-        if(!occupiedCarIds.isEmpty()) {
-            return CarMapper.toDTOList(carRepository.findAll().stream()
-                    .filter(car -> !occupiedCarIds.contains(car.getId()))
-                    .collect(Collectors.toList()));
-        }else {
-        return CarMapper.toDTOList(carRepository.findAll());
+        if (!occupiedCarIds.isEmpty()) {
+            return CarMapper.toDTOList(
+                    carRepository.findAll().stream()
+                            .filter(car -> !occupiedCarIds.contains(car.getId()))
+                            .collect(Collectors.toList())
+            );
+        } else {
+            return CarMapper.toDTOList(carRepository.findAll());
         }
     }
 
@@ -99,6 +99,7 @@ public class CarService {
         carRepository.deleteById(id);
     }
 
+
     private CarDTO toDTO(Car car) {
         CarDTO dto = new CarDTO();
         dto.setId(car.getId());
@@ -113,6 +114,7 @@ public class CarService {
         dto.setTransmissionType(car.getTransmissionType());
         dto.setPricePerDay(car.getPricePerDay());
         dto.setLicensePlate(car.getLicensePlate());
+        dto.setCity(car.getCity());
         return dto;
     }
 
@@ -120,7 +122,8 @@ public class CarService {
         Car car = new Car();
         car.setId(dto.getId());
         // Busca el usuario propietario por ID
-        User owner = userRepository.findById(dto.getOwnerId()).orElseThrow(() -> new RuntimeException("Owner not found"));
+        User owner = userRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
         car.setOwner(owner);
         car.setBrand(dto.getBrand());
         car.setModel(dto.getModel());
@@ -132,6 +135,29 @@ public class CarService {
         car.setTransmissionType(dto.getTransmissionType());
         car.setPricePerDay(dto.getPricePerDay());
         car.setLicensePlate(dto.getLicensePlate());
+        car.setCity(dto.getCity());
         return car;
+    }
+
+
+    public java.util.List<String> getCities() {
+        return carRepository.findDistinctCities();
+    }
+
+    public java.util.List<com.example.back_AutoYa.dto.CarDTO> filter(
+            String city, String brand, String model,
+            com.example.back_AutoYa.Entities.Enums.VehicleCategory category,
+            com.example.back_AutoYa.Entities.Enums.TransmissionType transmissionType,
+            String color) {
+
+        var list = carRepository.filter(
+                (city == null || city.isBlank()) ? null : city,
+                (brand == null || brand.isBlank()) ? null : brand,
+                (model == null || model.isBlank()) ? null : model,
+                category,
+                transmissionType,
+                (color == null || color.isBlank()) ? null : color
+        );
+        return com.example.back_AutoYa.Mapper.CarMapper.toDTOList(list);
     }
 }
