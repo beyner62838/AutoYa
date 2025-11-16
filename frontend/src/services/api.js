@@ -25,7 +25,4 @@ export function setApiToken(token) {
   localStorage.setItem('token', token)
 }
 
-// Ejemplo de uso con Axios:
-api.get('/api/cars')
-
 export default api
