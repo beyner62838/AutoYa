@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:10080'
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:11080/autoya'
 
 const api = axios.create({
   baseURL,
@@ -25,7 +25,5 @@ export function setApiToken(token) {
   localStorage.setItem('token', token)
 }
 
-// Ejemplo de uso con Axios:
-api.get('/api/cars')
 
 export default api
