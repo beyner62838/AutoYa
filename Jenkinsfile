@@ -6,14 +6,10 @@ pipeline {
     timestamps()
   }
 
-  parameters {
-    choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description: 'Ambiente destino')
-  }
-
   environment {
     // Selección dinámica de archivos según ambiente
-    COMPOSE_FILE = "docker-compose.${params.ENV}.yml"
-    ENV_FILE = ".env.${params.ENV}"
+    COMPOSE_FILE = "docker-compose.dev.yml"
+    ENV_FILE = ".env.dev"
   }
 
   stages {
@@ -22,7 +18,7 @@ pipeline {
         // Jenkins Multibranch ya hace el checkout automáticamente,
         // pero esto garantiza que tengamos la última versión
         checkout scm
-        echo "🌀 Branch actual: ${env.BRANCH_NAME}"
+        echo "🌀 Branch actual: ${env.BRANCH}"
       }
     }
 
