@@ -48,5 +48,13 @@
 
 ##  Registro de decisiones 
 - `/docs/adr-001-arquitectura.md` → CQRS + Redis para disponibilidad y reservas.  
-- `/docs/adr-002-pagos-mock-primero.md` → Pago simulado en MVP.  
+- `/docs/adr-002-pagos-mock-primero.md` → Pago simulado en MVP.
+
+---
+
+## Repositorios del proyecto
+- **Frontend AutoYa**: https://github.com/AlvaroV19/AutoYa-Frontend
+- **Backend AutoYa**: https://github.com/AlvaroV19/AutoYa-Backend
+- **Docs AutoYa**: https://github.com/AlvaroV19/AutoYa-Docs
+
 
