@@ -4,7 +4,6 @@
 - **Problema:** El alquiler tradicional de autos en agencias es rígido, costoso y con disponibilidad limitada; al mismo tiempo, muchos vehículos particulares están subutilizados.  
 - **Solución:** Plataforma P2P donde los propietarios publican sus vehículos y los clientes los reservan con seguridad, contratos digitales y trazabilidad.  
 - **Diferenciador:** Multiciudad, arquitectura distribuida con **CQRS + Redis** para disponibilidad y búsqueda rápida, y **SAGA** para gestión de reservas/pagos de forma resiliente.  
-
 ---
 
 ## 🔗 Enlaces Únicos 
